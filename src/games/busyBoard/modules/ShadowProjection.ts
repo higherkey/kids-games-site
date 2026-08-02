@@ -1,38 +1,23 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 import type { LuminaryBoardGame } from '../LuminaryBoardGame';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
 
-export class ShadowProjection implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-  private game: LuminaryBoardGame;
+export class ShadowProjection extends BaseBusyBoardModule {
+  private readonly game: LuminaryBoardGame;
 
   private isDragging = false;
   private puckX = 0; // Relative coordinates inside card
   private puckY = 0;
   private setupDone = false;
 
-  private audio: AudioController;
-  private haptics: HapticController;
-
   constructor(id: string, x: number, y: number, w: number, h: number, game: LuminaryBoardGame) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
+    super(id, x, y, w, h);
     this.game = game;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
   }
 
-  public init(): void {}
+  private animPhase = 0;
 
   public render(ctx: CanvasRenderingContext2D, px: number, py: number, pw: number, ph: number): void {
+    this.animPhase += 0.05;
     const theme = this.game.getTheme();
     const margin = 12;
     const mx = px + margin;
@@ -49,26 +34,7 @@ export class ShadowProjection implements BusyBoardModule {
       this.setupDone = true;
     }
 
-    // Outer faceplate
-    ctx.save();
-    ctx.shadowColor = theme === 'paper' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 255, 204, 0.15)';
-    ctx.shadowBlur = 8;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 4;
-
-    if (theme === 'paper') {
-      ctx.fillStyle = '#FAF8F5';
-      ctx.strokeStyle = '#D5C3A6';
-    } else {
-      ctx.fillStyle = '#1A1D24';
-      ctx.strokeStyle = '#00FFCC';
-    }
-    ctx.lineWidth = 3;
-    this.roundRect(ctx, mx, my, mw, mh, 16);
-    ctx.fill();
-    ctx.shadowColor = 'transparent';
-    ctx.stroke();
-    ctx.restore();
+    this.drawOuterFaceplate(ctx, theme, mx, my, mw, mh);
 
     // Title
     ctx.save();
@@ -92,39 +58,7 @@ export class ShadowProjection implements BusyBoardModule {
     const padW = mw - padMargin * 2;
     const padH = mh - 55;
 
-    ctx.save();
-    if (theme === 'paper') {
-      ctx.fillStyle = '#F4EFE6';
-      ctx.strokeStyle = '#E3DBCF';
-    } else {
-      ctx.fillStyle = '#0D1115';
-      ctx.strokeStyle = '#1D252E';
-    }
-    ctx.lineWidth = 2;
-    this.roundRect(ctx, padX, padY, padW, padH, 12);
-    ctx.fill();
-    ctx.stroke();
-
-    // Grid lines inside pad
-    ctx.strokeStyle = theme === 'paper' ? 'rgba(213, 195, 166, 0.4)' : 'rgba(0, 255, 204, 0.08)';
-    ctx.lineWidth = 1;
-    const numLines = 5;
-    for (let i = 1; i < numLines; i++) {
-      // vertical
-      const lx = padX + (i / numLines) * padW;
-      ctx.beginPath();
-      ctx.moveTo(lx, padY);
-      ctx.lineTo(lx, padY + padH);
-      ctx.stroke();
-
-      // horizontal
-      const ly = padY + (i / numLines) * padH;
-      ctx.beginPath();
-      ctx.moveTo(padX, ly);
-      ctx.lineTo(padX + padW, ly);
-      ctx.stroke();
-    }
-    ctx.restore();
+    this.drawTouchPadGrid(ctx, theme, padX, padY, padW, padH);
 
     // Light Source drawing (Fixed point at top center of touch pad)
     const lightX = padX + padW / 2;
@@ -153,26 +87,40 @@ export class ShadowProjection implements BusyBoardModule {
     // Calculate Shadow Offset (Casted away from light source)
     const dx = this.puckX - lightX;
     const dy = this.puckY - lightY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    const distance = Math.hypot(dx, dy);
+    const angle = Math.atan2(dy, dx);
     
-    const shadowScale = 0.25; // Shadow length factor
-    const shadowX = this.puckX + dx * shadowScale;
-    const shadowY = this.puckY + dy * shadowScale;
-    const shadowRadius = 22;
-    const shadowBlur = Math.min(15, 3 + distance * 0.05);
+    // Shadow projection geometry: closer to light = longer, wider shadow
+    const shadowStretch = Math.max(10, 1200 / Math.max(40, distance));
+    const shadowX = this.puckX + Math.cos(angle) * shadowStretch;
+    const shadowY = this.puckY + Math.sin(angle) * shadowStretch;
+    const shadowRadiusX = 20 + shadowStretch * 0.3;
+    const shadowRadiusY = 14;
 
     // Render Shadow
     ctx.save();
-    ctx.shadowColor = theme === 'paper' ? 'rgba(0, 0, 0, 0.35)' : 'rgba(0, 0, 0, 0.6)';
-    ctx.shadowBlur = shadowBlur;
-    ctx.shadowOffsetX = shadowX - this.puckX;
-    ctx.shadowOffsetY = shadowY - this.puckY;
-
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.01)'; // Drawing invisible filled arc to utilize canvas shadow rendering
+    ctx.translate(shadowX, shadowY);
+    ctx.rotate(angle);
+    ctx.fillStyle = theme === 'paper' ? 'rgba(50, 45, 35, 0.35)' : 'rgba(0, 0, 0, 0.55)';
     ctx.beginPath();
-    ctx.arc(this.puckX, this.puckY, shadowRadius, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, shadowRadiusX, shadowRadiusY, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
+
+    // Active Light Ripple Arcs
+    if (this.isDragging) {
+      ctx.save();
+      for (let i = 0; i < 3; i++) {
+        const offset = ((this.animPhase + i * 0.8) % 2.5) * 12;
+        const alpha = Math.max(0, 1 - offset / 30);
+        ctx.strokeStyle = theme === 'paper' ? `rgba(230, 126, 34, ${alpha * 0.6})` : `rgba(0, 255, 204, ${alpha * 0.7})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(this.puckX, this.puckY, 20 + offset, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
 
     // Draw the draggable puck
     ctx.save();
@@ -213,7 +161,7 @@ export class ShadowProjection implements BusyBoardModule {
     // Check click on puck
     const dx = x - this.puckX;
     const dy = y - this.puckY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = Math.hypot(dx, dy);
 
     if (dist <= 25) {
       this.isDragging = true;
@@ -254,7 +202,7 @@ export class ShadowProjection implements BusyBoardModule {
     this.puckY = Math.max(padY + 20, Math.min(padY + padH - 20, y));
 
     // Pitch follows drag distance
-    const distFromCenter = Math.sqrt(Math.pow(this.puckX - (padX + padW / 2), 2) + Math.pow(this.puckY - (padY + padH / 2), 2));
+    const distFromCenter = Math.hypot(this.puckX - (padX + padW / 2), this.puckY - (padY + padH / 2));
     const pitch = 150 + distFromCenter * 1.5;
 
     if (Math.random() < 0.25) {
@@ -270,7 +218,65 @@ export class ShadowProjection implements BusyBoardModule {
     }
   }
 
-  public destroy(): void {}
+
+
+  private drawOuterFaceplate(ctx: CanvasRenderingContext2D, theme: string, mx: number, my: number, mw: number, mh: number): void {
+    ctx.save();
+    ctx.shadowColor = theme === 'paper' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 255, 204, 0.15)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 4;
+
+    if (theme === 'paper') {
+      ctx.fillStyle = '#FAF8F5';
+      ctx.strokeStyle = '#D5C3A6';
+    } else {
+      ctx.fillStyle = '#1A1D24';
+      ctx.strokeStyle = '#00FFCC';
+    }
+    ctx.lineWidth = 3;
+    this.roundRect(ctx, mx, my, mw, mh, 16);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  private drawTouchPadGrid(ctx: CanvasRenderingContext2D, theme: string, padX: number, padY: number, padW: number, padH: number): void {
+    ctx.save();
+    if (theme === 'paper') {
+      ctx.fillStyle = '#F4EFE6';
+      ctx.strokeStyle = '#E3DBCF';
+    } else {
+      ctx.fillStyle = '#0D1115';
+      ctx.strokeStyle = '#1D252E';
+    }
+    ctx.lineWidth = 2;
+    this.roundRect(ctx, padX, padY, padW, padH, 12);
+    ctx.fill();
+    ctx.stroke();
+
+    // Grid lines inside pad
+    ctx.strokeStyle = theme === 'paper' ? 'rgba(213, 195, 166, 0.4)' : 'rgba(0, 255, 204, 0.08)';
+    ctx.lineWidth = 1;
+    const numLines = 5;
+    for (let i = 1; i < numLines; i++) {
+      // vertical
+      const lx = padX + (i / numLines) * padW;
+      ctx.beginPath();
+      ctx.moveTo(lx, padY);
+      ctx.lineTo(lx, padY + padH);
+      ctx.stroke();
+
+      // horizontal
+      const ly = padY + (i / numLines) * padH;
+      ctx.beginPath();
+      ctx.moveTo(padX, ly);
+      ctx.lineTo(padX + padW, ly);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     if (w < 2 * r) r = w / 2;

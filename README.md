@@ -48,6 +48,13 @@ Built with a "Sensory-First" philosophy, Kipu transforms a standard web browser 
 | Haptics | Web Haptics API (`HapticController`) |
 | PWA | vite-plugin-pwa + Service Workers |
 
+### Sound Design & Auditory Philosophy
+
+Kipu follows a strict **Tactile Sound Design Mandate** (see [.agents/sound-design-rules.md](.agents/sound-design-rules.md)):
+- **Gentle & Non-Fatiguing:** Audio uses warm sine/triangle waveforms, low-pass filtering (1200Hz–2500Hz), and soft attack envelopes to protect young ears and prevent auditory fatigue.
+- **Impactful Mechanical Weight:** Toggles, latches, and switches emphasize warm, felt/wood mechanical clacks (60Hz–250Hz) rather than high-pitched metallic snaps (benchmarked by the Contrast Inverter click).
+- **Smooth Motion Glissando:** Continuous controls (sliders, dials, pucks) use real-time pitch-bending glides (`startGlide`, `updateGlide`, `stopGlide`) restricted to comforting mid-frequency registers (120Hz–650Hz).
+
 ---
 
 ## Design System

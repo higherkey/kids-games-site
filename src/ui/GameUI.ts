@@ -19,9 +19,9 @@ export interface GameUIConfig {
  * Combines GameHeader (HUD) with a slide-out settings menu.
  */
 export class GameUI {
-  private config: GameUIConfig;
-  private gameHeader: GameHeader;
-  private element: HTMLElement;
+  private readonly config: GameUIConfig;
+  private readonly gameHeader: GameHeader;
+  private readonly element: HTMLElement;
   private isOpen = false;
   private isPaused = false;
 
@@ -75,7 +75,7 @@ export class GameUI {
                   <span class="settings-icon">${Icons.volumeOn}</span>
                   <span>Sound</span>
                 </label>
-                <button class="settings-toggle ${this.config.soundEnabled ? 'on' : ''}" title="Toggle Sound" aria-label="Toggle Sound">
+                <button class="settings-toggle ${this.config.soundEnabled ? 'on' : ''}" title="Toggle Sound" aria-label="Toggle Sound" aria-pressed="${this.config.soundEnabled}">
                   <span class="toggle-track">
                     <span class="toggle-thumb"></span>
                   </span>
@@ -86,7 +86,7 @@ export class GameUI {
                   <span class="settings-icon">${Icons.vibrationOn}</span>
                   <span>Vibration</span>
                 </label>
-                <button class="settings-toggle ${this.config.vibrationEnabled ? 'on' : ''}" title="Toggle Vibration" aria-label="Toggle Vibration">
+                <button class="settings-toggle ${this.config.vibrationEnabled ? 'on' : ''}" title="Toggle Vibration" aria-label="Toggle Vibration" aria-pressed="${this.config.vibrationEnabled}">
                   <span class="toggle-track">
                     <span class="toggle-thumb"></span>
                   </span>
@@ -114,6 +114,7 @@ export class GameUI {
     soundToggle?.addEventListener('click', () => {
       soundToggle.classList.toggle('on');
       const newState = soundToggle.classList.contains('on');
+      soundToggle.setAttribute('aria-pressed', String(newState));
       this.config.onSoundToggle(newState);
     });
 
@@ -122,6 +123,7 @@ export class GameUI {
     vibrationToggle?.addEventListener('click', () => {
       vibrationToggle.classList.toggle('on');
       const newState = vibrationToggle.classList.contains('on');
+      vibrationToggle.setAttribute('aria-pressed', String(newState));
       this.config.onVibrationToggle(newState);
     });
 
@@ -139,6 +141,9 @@ export class GameUI {
   }
 
   public unmount(): void {
+    if (this.isOpen) {
+      this.closeMenu();
+    }
     this.element.remove();
     this.gameHeader.unmount();
   }

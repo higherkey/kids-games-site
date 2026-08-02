@@ -1,39 +1,18 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 
-export class GearTrainTrio implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-
+export class GearTrainTrio extends BaseBusyBoardModule {
   private angle1 = 0; // base angle for Gear 1
-  private teeth1 = 12;
-  private teeth2 = 8;
-  private teeth3 = 10;
+  private readonly teeth1 = 12;
+  private readonly teeth2 = 8;
+  private readonly teeth3 = 10;
 
   private draggingGear: number | null = null;
   private prevDragAngle = 0;
   private lastTickAngle = 0;
 
-  private audio: AudioController;
-  private haptics: HapticController;
-
   constructor(id: string, x: number, y: number, w: number, h: number) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super(id, x, y, w, h);
   }
-
-  public init(): void {}
-
-  public setPowerState(_hasPower: boolean): void {}
 
   public render(ctx: CanvasRenderingContext2D, px: number, py: number, pw: number, ph: number): void {
     const margin = 10;
@@ -130,9 +109,9 @@ export class GearTrainTrio implements BusyBoardModule {
     ctx.stroke();
 
     // Render gears
-    this.drawGear(ctx, centers[0].x, centers[0].y, r1, this.teeth1, a1, '#D4AF37', '#B8860B'); // Gold/Brass
-    this.drawGear(ctx, centers[1].x, centers[1].y, r2, this.teeth2, a2, '#B87333', '#8B4513'); // Copper
-    this.drawGear(ctx, centers[2].x, centers[2].y, r3, this.teeth3, a3, '#C0C0C0', '#808080'); // Silver/Chrome
+    this.drawGear(ctx, centers[0], r1, this.teeth1, a1, '#D4AF37', '#B8860B'); // Gold/Brass
+    this.drawGear(ctx, centers[1], r2, this.teeth2, a2, '#B87333', '#8B4513'); // Copper
+    this.drawGear(ctx, centers[2], r3, this.teeth3, a3, '#C0C0C0', '#808080'); // Silver/Chrome
   }
 
   private getGearCenters(mx: number, my: number, mw: number, mh: number) {
@@ -147,8 +126,7 @@ export class GearTrainTrio implements BusyBoardModule {
 
   private drawGear(
     ctx: CanvasRenderingContext2D,
-    cx: number,
-    cy: number,
+    center: { x: number; y: number },
     r: number,
     teeth: number,
     angle: number,
@@ -156,7 +134,7 @@ export class GearTrainTrio implements BusyBoardModule {
     strokeColor: string
   ) {
     ctx.save();
-    ctx.translate(cx, cy);
+    ctx.translate(center.x, center.y);
     ctx.rotate(angle);
 
     // Gear body
@@ -277,7 +255,7 @@ export class GearTrainTrio implements BusyBoardModule {
     this.draggingGear = null;
   }
 
-  public destroy(): void {}
+
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     if (w < 2 * r) r = w / 2;

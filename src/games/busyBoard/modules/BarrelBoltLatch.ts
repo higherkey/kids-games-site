@@ -1,35 +1,14 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 
-export class BarrelBoltLatch implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-
+export class BarrelBoltLatch extends BaseBusyBoardModule {
   private isDragging = false;
   private boltX = 15; // relative offset (min 15, max 95)
-  private maxBoltX = 95;
+  private readonly maxBoltX = 95;
   private isUnlocked = false;
-  
-  private audio: AudioController;
-  private haptics: HapticController;
 
   constructor(id: string, x: number, y: number, w: number, h: number) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super(id, x, y, w, h);
   }
-
-  public init(): void {}
-
-  public setPowerState(_hasPower: boolean): void {}
 
   public render(ctx: CanvasRenderingContext2D, px: number, py: number, pw: number, ph: number): void {
     const margin = 10;
@@ -193,7 +172,7 @@ export class BarrelBoltLatch implements BusyBoardModule {
     // Check hit on bolt knob
     const dx = x - knobX;
     const dy = y - centerY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = Math.hypot(dx, dy);
 
     if (dist <= 25) {
       this.isDragging = true;
@@ -245,7 +224,7 @@ export class BarrelBoltLatch implements BusyBoardModule {
     }
   }
 
-  public destroy(): void {}
+
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     if (w < 2 * r) r = w / 2;

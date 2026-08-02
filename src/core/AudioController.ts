@@ -1,12 +1,20 @@
 import { Howl, Howler } from 'howler';
+import type { IAudioEngine } from './IAudioEngine';
+
+interface ContinuousVoice {
+  osc: OscillatorNode;
+  filter?: BiquadFilterNode;
+  panner?: StereoPannerNode;
+  gain: GainNode;
+  instrument: string;
+}
 
 class SynthEngine {
   private ctx: AudioContext | null = null;
+  private continuousVoices: Map<string, ContinuousVoice> = new Map();
 
   private init() {
-    if (!this.ctx) {
-      this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
+    this.ctx ??= new (window.AudioContext || (window as any).webkitAudioContext)();
   }
 
   public play(instrument: string, noteOrFreq: string | number) {
@@ -44,12 +52,130 @@ class SynthEngine {
     }
   }
 
+  /**
+   * Start a continuous glide tone attached to a drag session ID
+   */
+  public startGlide(id: string, instrument: string, initialFreq: number, volume = 0.25, pan = 0) {
+    this.init();
+    if (!this.ctx) return;
+
+    const soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+    if (!soundEnabled) return;
+
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+
+    if (this.continuousVoices.has(id)) {
+      this.stopGlide(id);
+    }
+
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+    let panner: StereoPannerNode | undefined;
+
+    if (this.ctx.createStereoPanner) {
+      panner = this.ctx.createStereoPanner();
+      panner.pan.setValueAtTime(Math.max(-1, Math.min(1, pan)), now);
+    }
+
+    if (instrument === 'windchime') {
+      osc.type = 'sine';
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(1400, now);
+    } else if (instrument === 'glass' || instrument === 'fm') {
+      osc.type = 'sine';
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(initialFreq * 3, now);
+    } else if (instrument === 'hum' || instrument === 'dimmer') {
+      osc.type = 'sawtooth';
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(initialFreq * 1.5, now);
+    } else if (instrument === 'pad' || instrument === 'rainbow') {
+      osc.type = 'triangle';
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(initialFreq * 2.5, now);
+    } else {
+      osc.type = 'sine';
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(initialFreq * 2, now);
+    }
+
+    osc.frequency.setValueAtTime(initialFreq, now);
+
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(volume, now + 0.03); // Attack
+
+    osc.connect(filter);
+    if (panner) {
+      filter.connect(panner);
+      panner.connect(gain);
+    } else {
+      filter.connect(gain);
+    }
+    gain.connect(this.ctx.destination);
+
+    osc.start(now);
+    this.continuousVoices.set(id, { osc, filter, panner, gain, instrument });
+  }
+
+  /**
+   * Smoothly glide frequency and cutoff in real-time
+   */
+  public updateGlide(id: string, targetFreq: number, volume?: number, pan?: number) {
+    const voice = this.continuousVoices.get(id);
+    if (!voice || !this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    // For windchime, pitch stays fixed (no tone or volume changes, only pan change)
+    if (voice.instrument !== 'windchime') {
+      voice.osc.frequency.setTargetAtTime(targetFreq, now, 0.03); // 30ms smooth glissando
+
+      if (voice.filter) {
+        const cutoffMultiplier = voice.instrument === 'glass' ? 3 : 2;
+        voice.filter.frequency.setTargetAtTime(targetFreq * cutoffMultiplier, now, 0.04);
+      }
+
+      if (typeof volume === 'number') {
+        voice.gain.gain.setTargetAtTime(volume, now, 0.02);
+      }
+    }
+
+    if (typeof pan === 'number' && voice.panner) {
+      voice.panner.pan.setTargetAtTime(Math.max(-1, Math.min(1, pan)), now, 0.03);
+    }
+  }
+
+  /**
+   * Release continuous voice smoothly on touch release
+   */
+  public stopGlide(id: string) {
+    const voice = this.continuousVoices.get(id);
+    if (!voice || !this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    voice.gain.gain.linearRampToValueAtTime(0.0001, now + 0.05); // 50ms fade release
+
+    setTimeout(() => {
+      try {
+        voice.osc.stop();
+        voice.osc.disconnect();
+      } catch {
+        // Voice might already be stopped
+      }
+    }, 60);
+
+    this.continuousVoices.delete(id);
+  }
+
   private noteToFreq(note: string): number {
     const notes = ['c', 'c#', 'd', 'd#', 'e', 'f', 'f#', 'g', 'g#', 'a', 'a#', 'b'];
-    const match = note.toLowerCase().match(/^([a-g]#?)(\d+)$/);
+    const match = new RegExp(/^([a-g]#?)(\d+)$/).exec(note.toLowerCase());
     if (!match) return 440;
     const name = match[1];
-    const octave = parseInt(match[2], 10);
+    const octave = Number.parseInt(match[2], 10);
     const index = notes.indexOf(name);
     const key = index + 12 * octave;
     return 440 * Math.pow(2, (key - 57) / 12);
@@ -181,8 +307,8 @@ class SynthEngine {
 
 export class AudioController {
   private static instance: AudioController;
-  private sounds: Map<string, Howl> = new Map();
-  private synth = new SynthEngine();
+  private readonly sounds: Map<string, Howl> = new Map();
+  private readonly synth = new SynthEngine();
 
   private constructor() {
     this.updateMuteState();
@@ -222,6 +348,17 @@ export class AudioController {
     }
   }
 
+  public startGlide(id: string, instrument: string, initialFreq: number, volume?: number, pan?: number) {
+    this.synth.startGlide(id, instrument, initialFreq, volume, pan);
+  }
+
+  public updateGlide(id: string, targetFreq: number, volume?: number, pan?: number) {
+    this.synth.updateGlide(id, targetFreq, volume, pan);
+  }
+
+  public stopGlide(id: string) {
+    this.synth.stopGlide(id);
+  }
 
   /**
    * Checks if a specific language or accent is installed on the system.
@@ -235,10 +372,8 @@ export class AudioController {
     const regionalFamilies = ['en', 'es', 'pt'];
 
     if (regionalFamilies.includes(langFamily)) {
-      // Must have an exact accent match (e.g. en-au, es-mx)
       return voices.some(v => v.lang.toLowerCase().replace('_', '-') === normLang);
     } else {
-      // General family match is fine for non-regionalized entries (e.g. de-DE, ja-JP)
       return voices.some(v => v.lang.toLowerCase().replace('_', '-').startsWith(langFamily));
     }
   }
@@ -261,16 +396,13 @@ export class AudioController {
       const normLang = lang.toLowerCase().replace('_', '-');
       const langFamily = normLang.split('-')[0];
 
-      // Filter candidate voices that match this language code exactly
       let candidates = voices.filter(v => v.lang.toLowerCase().replace('_', '-') === normLang);
 
-      // If no exact match and it's not a regionalized family, fall back to language prefix match
       const regionalFamilies = ['en', 'es', 'pt'];
       if (candidates.length === 0 && !regionalFamilies.includes(langFamily)) {
         candidates = voices.filter(v => v.lang.toLowerCase().replace('_', '-').startsWith(langFamily));
       }
 
-      // Rank candidates to prefer high-quality/neural voices
       const ranked = candidates.map(v => {
         let score = 0;
         const nameLower = v.name.toLowerCase();

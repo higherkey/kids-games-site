@@ -12,8 +12,8 @@ export interface GameHeaderConfig {
  * Displays a home button/logo on the left and a menu toggle on the right.
  */
 export class GameHeader {
-  private element: HTMLElement;
-  private config: GameHeaderConfig;
+  private readonly element: HTMLElement;
+  private readonly config: GameHeaderConfig;
 
   constructor(config: GameHeaderConfig) {
     this.config = config;

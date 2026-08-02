@@ -101,6 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         particlePhysics: 'particle',
         switchboard: 'settings',
         luminaryBoard: 'bulb',
+        luminaryBoardTone: 'bulb',
         mechanicalWorkshop: 'settings',
       };
       const iconKey = iconMap[gameId];
@@ -117,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     dotsContainer.querySelectorAll('.dot').forEach(dot => {
       dot.addEventListener('click', (e) => {
-        const idx = parseInt((e.currentTarget as HTMLElement).getAttribute('data-index') || '0');
+        const idx = Number.parseInt((e.currentTarget as HTMLElement).dataset.index || '0');
         currentHeroIndex = idx;
         updateHeroBanner();
         startHeroRotation();
@@ -255,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Filter games by portal
     const gameCards = document.querySelectorAll('#game-list a');
     gameCards.forEach(card => {
-      const cardPortal = (card as HTMLElement).getAttribute('data-portal');
+      const cardPortal = (card as HTMLElement).dataset.portal;
       if (cardPortal === portalId) {
         card.classList.remove('hidden');
       } else {
@@ -325,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     currentResizeHandler = () => {
       resizeCanvas(gameCanvas);
-      if (activeGame && activeGame.resize) {
+      if (activeGame?.resize) {
         activeGame.resize(gameCanvas.width, gameCanvas.height);
       }
     };
@@ -384,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     tabBar.querySelectorAll('.tab-item').forEach(item => {
-      const tabName = (item as HTMLElement).getAttribute('data-tab');
+      const tabName = (item as HTMLElement).dataset.tab;
       if (tabName === activeTab) {
         item.classList.add('active');
       } else {
@@ -424,7 +425,7 @@ function startGame(gameId: string, canvas: HTMLCanvasElement) {
       soundEnabled = enabled;
       localStorage.setItem('soundEnabled', String(enabled));
       // Notify active game of sound setting change
-      if (activeGame && activeGame.setSoundEnabled) {
+      if (activeGame?.setSoundEnabled) {
         activeGame.setSoundEnabled(enabled);
       }
       // Update global audio controller mute state
@@ -434,7 +435,7 @@ function startGame(gameId: string, canvas: HTMLCanvasElement) {
       vibrationEnabled = enabled;
       localStorage.setItem('vibrationEnabled', String(enabled));
       // Notify active game of vibration setting change
-      if (activeGame && activeGame.setVibrationEnabled) {
+      if (activeGame?.setVibrationEnabled) {
         activeGame.setVibrationEnabled(enabled);
       }
     },
@@ -454,12 +455,12 @@ function startGame(gameId: string, canvas: HTMLCanvasElement) {
 }
 
 function pauseGame() {
-  if (activeGame) activeGame.pause();
+  activeGame?.pause?.();
   gameLoop?.stop();
 }
 
 function resumeGame() {
-  if (activeGame) activeGame.resume();
+  activeGame?.resume?.();
   gameLoop?.start();
   idleManager?.start();
 }
@@ -477,7 +478,7 @@ function exitToHome() {
   if (activeGameId) {
     const registry = GameRegistry.getInstance();
     const gameInfo = registry.get(activeGameId);
-    if (gameInfo && gameInfo.portal) {
+    if (gameInfo?.portal) {
       router?.navigate(`/portal/${gameInfo.portal}`);
       return;
     }

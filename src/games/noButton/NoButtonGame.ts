@@ -1,23 +1,17 @@
-import type { Game } from '../../core/Game';
-import { AudioController } from '../../core/AudioController';
+import { BaseGame } from '../../core/BaseGame';
 import { LANGUAGES, TranslationManager } from '../../core/TranslationManager';
 import './NoButtonGame.css';
 
-export class NoButtonGame implements Game {
-  private canvas: HTMLCanvasElement | null = null;
+export class NoButtonGame extends BaseGame {
   private container: HTMLDivElement | null = null;
-  private audio: AudioController;
   private isDropdownOpen = false;
   private documentClickListener: ((e: MouseEvent) => void) | null = null;
   private voicesChangedListener: (() => void) | null = null;
 
-  constructor() {
-    this.audio = AudioController.getInstance();
-  }
 
-  init(canvas: HTMLCanvasElement): void {
-    this.canvas = canvas;
-    this.canvas.classList.add('hidden'); // We use DOM for this game
+
+  protected onInit(): void {
+    this.canvas?.classList.add('hidden'); // We use DOM for this game
 
     this.container = document.createElement('div');
     this.container.id = 'no-button-game';
@@ -96,7 +90,7 @@ export class NoButtonGame implements Game {
     const trigger = this.container?.querySelector('#dropdown-trigger-btn');
     if (!dropdown || !trigger) return;
 
-    this.isDropdownOpen = show !== undefined ? show : !this.isDropdownOpen;
+    this.isDropdownOpen = show ?? !this.isDropdownOpen;
     dropdown.classList.toggle('show', this.isDropdownOpen);
     trigger.setAttribute('aria-expanded', String(this.isDropdownOpen));
   }
@@ -112,9 +106,9 @@ export class NoButtonGame implements Game {
       if (!isSupported) {
         // Detect OS for custom installation instructions
         const userAgent = navigator.userAgent;
-        const isWindows = userAgent.indexOf('Windows') !== -1;
-        const isMac = userAgent.indexOf('Mac') !== -1;
-        const isAndroid = userAgent.indexOf('Android') !== -1;
+        const isWindows = userAgent.includes('Windows');
+        const isMac = userAgent.includes('Mac');
+        const isAndroid = userAgent.includes('Android');
         const isIOS = /iPad|iPhone|iPod/.test(userAgent);
 
         let instructions = 'Install this voice package in your device settings.';
@@ -205,7 +199,7 @@ export class NoButtonGame implements Game {
     if (wrapper) {
       wrapper.classList.remove(className);
       // Trigger reflow to restart CSS animation
-      void (wrapper as HTMLElement).offsetWidth;
+      const _reflow = (wrapper as HTMLElement).offsetWidth;
       wrapper.classList.add(className);
     }
   }

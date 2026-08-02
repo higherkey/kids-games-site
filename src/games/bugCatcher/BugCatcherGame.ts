@@ -1,6 +1,4 @@
-import type { Game } from '../../core/Game';
-import { AudioController } from '../../core/AudioController';
-import { HapticController } from '../../core/HapticController';
+import { BaseGame } from '../../core/BaseGame';
 
 interface Bug {
   x: number;
@@ -14,30 +12,22 @@ interface Bug {
  * Nuko (Bug Catcher): Search-and-find hidden bug game.
  * Uses Z-index sprite layering and slow scanning mechanics to encourage focus.
  */
-export class BugCatcherGame implements Game {
-  private canvas: HTMLCanvasElement | null = null;
-  private ctx: CanvasRenderingContext2D | null = null;
+export class BugCatcherGame extends BaseGame {
   private bugs: Bug[] = [];
-  private audio: AudioController;
-  private haptics: HapticController;
   private bugsCaught = 0;
-  private totalBugs = 4;
+  private readonly totalBugs = 4;
   private texturePhase = 0; // For animated natural texture background
 
   constructor() {
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super();
     this.audio.registerSound('catch', '/sounds/pop.ogg'); // Reuse pop for now
   }
 
-  init(canvas: HTMLCanvasElement): void {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
-    
+  protected onInit(): void {
     this.createBugs();
 
-    canvas.addEventListener('touchstart', this.handleTouch);
-    canvas.addEventListener('mousedown', this.handleMouseDown);
+    this.canvas?.addEventListener('touchstart', this.handleTouch);
+    this.canvas?.addEventListener('mousedown', this.handleMouseDown);
   }
 
   private createBugs() {
@@ -67,13 +57,13 @@ export class BugCatcherGame implements Game {
     return { x: clientX - rect.left, y: clientY - rect.top };
   }
 
-  private handleTouch = (e: TouchEvent) => {
+  private readonly handleTouch = (e: TouchEvent) => {
     const touch = e.changedTouches[0];
     const pos = this.getCanvasPos(touch.clientX, touch.clientY);
     this.checkBugClick(pos.x, pos.y);
   };
 
-  private handleMouseDown = (e: MouseEvent) => {
+  private readonly handleMouseDown = (e: MouseEvent) => {
     const pos = this.getCanvasPos(e.clientX, e.clientY);
     this.checkBugClick(pos.x, pos.y);
   };
@@ -83,7 +73,7 @@ export class BugCatcherGame implements Game {
     for (let i = this.bugs.length - 1; i >= 0; i--) {
       const bug = this.bugs[i];
       if (!bug.caught) {
-        const dist = Math.sqrt((x - bug.x) ** 2 + (y - bug.y) ** 2);
+        const dist = Math.hypot((x - bug.x), (y - bug.y));
         if (dist < bug.radius) {
           bug.caught = true;
           this.bugsCaught++;
@@ -211,8 +201,7 @@ export class BugCatcherGame implements Game {
     }
   }
 
-  pause(): void {}
-  resume(): void {}
+
 
   destroy(): void {
     if (this.canvas) {

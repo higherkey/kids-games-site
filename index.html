@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Kipu — A tactile, educational, and sensory mini-game suite for children, inspired by the Andean khipu." />
     <meta name="theme-color" content="#3D2B1F" />
     <title>Kipu: Kids Games</title>
@@ -36,7 +36,7 @@
             <h2 id="hero-title">Eeno</h2>
             <p id="hero-subtitle">The "No" Button</p>
             <p id="hero-desc">Play with funny voices and learn standard words in many languages!</p>
-            <a href="/game/noButton" id="hero-play-btn" class="hero-btn-play">Play Now</a>
+            <a href="/game/noButton" id="hero-play-btn" class="hero-btn-play" aria-label="Play featured game: Play Now">Play Now</a>
           </div>
           <div class="hero-interactive-preview">
             <span id="hero-icon-container"></span>
@@ -175,7 +175,14 @@
             <span class="icon"></span>
             <span class="game-label">
               <span class="game-title">The Luminary Board</span>
-              <span class="game-subtitle">Dimmers & Color Matrices</span>
+              <span class="game-subtitle">Web Audio Synth</span>
+            </span>
+          </a>
+          <a href="/game/luminaryBoardTone" data-game="luminaryBoardTone" data-portal="busyBoard" data-category="sensory" role="menuitem">
+            <span class="icon"></span>
+            <span class="game-label">
+              <span class="game-title">The Luminary Board (Tone.js)</span>
+              <span class="game-subtitle">Tone.js Synthesizer Studio</span>
             </span>
           </a>
           <a href="/game/mechanicalWorkshop" data-game="mechanicalWorkshop" data-portal="busyBoard" data-category="sensory" role="menuitem">

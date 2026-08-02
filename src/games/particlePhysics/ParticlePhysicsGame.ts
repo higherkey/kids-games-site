@@ -1,5 +1,4 @@
-import type { Game } from '../../core/Game';
-import { HapticController } from '../../core/HapticController';
+import { BaseGame } from '../../core/BaseGame';
 
 interface Particle {
   x: number;
@@ -18,10 +17,7 @@ const PALETTE = [
   '#F472B6', '#FBBF24', '#60A5FA', '#C084FC',
 ];
 
-export class ParticlePhysicsGame implements Game {
-  private canvas: HTMLCanvasElement | null = null;
-  private ctx: CanvasRenderingContext2D | null = null;
-  private readonly haptics: HapticController;
+export class ParticlePhysicsGame extends BaseGame {
   private particles: Particle[] = [];
   private paused = false;
   private pointers: Map<number, { x: number; y: number }> = new Map();
@@ -33,13 +29,9 @@ export class ParticlePhysicsGame implements Game {
   private lastHapticTime = 0;
   private readonly hapticInterval = 80;
 
-  constructor() {
-    this.haptics = HapticController.getInstance();
-  }
 
-  init(canvas: HTMLCanvasElement): void {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
+
+  protected onInit(): void {
     this.particles = [];
     this.pointers = new Map();
     this.paused = false;
@@ -51,13 +43,13 @@ export class ParticlePhysicsGame implements Game {
     this.particleDuration = 2 + Math.random() * 3;
     this.particleDensity = 3 + Math.floor(Math.random() * 5);
 
-    canvas.addEventListener('mousedown', this.onMouseDown);
-    canvas.addEventListener('mousemove', this.onMouseMove);
-    canvas.addEventListener('mouseup', this.onMouseUp);
-    canvas.addEventListener('touchstart', this.onTouchStart);
-    canvas.addEventListener('touchmove', this.onTouchMove);
-    canvas.addEventListener('touchend', this.onTouchEnd);
-    canvas.addEventListener('touchcancel', this.onTouchEnd);
+    this.canvas?.addEventListener('mousedown', this.onMouseDown);
+    this.canvas?.addEventListener('mousemove', this.onMouseMove);
+    this.canvas?.addEventListener('mouseup', this.onMouseUp);
+    this.canvas?.addEventListener('touchstart', this.onTouchStart);
+    this.canvas?.addEventListener('touchmove', this.onTouchMove);
+    this.canvas?.addEventListener('touchend', this.onTouchEnd);
+    this.canvas?.addEventListener('touchcancel', this.onTouchEnd);
   }
 
   private getCanvasPos(clientX: number, clientY: number): { x: number; y: number } {
@@ -65,7 +57,7 @@ export class ParticlePhysicsGame implements Game {
     return { x: clientX - rect.left, y: clientY - rect.top };
   }
 
-  private onMouseDown = (e: MouseEvent) => {
+  private readonly onMouseDown = (e: MouseEvent) => {
     this.pointers.set(-1, this.getCanvasPos(e.clientX, e.clientY));
     this.haptics.lightTap();
     this.lastHapticTime = performance.now();
@@ -79,18 +71,18 @@ export class ParticlePhysicsGame implements Game {
     }
   }
 
-  private onMouseMove = (e: MouseEvent) => {
+  private readonly onMouseMove = (e: MouseEvent) => {
     if (this.pointers.has(-1)) {
       this.pointers.set(-1, this.getCanvasPos(e.clientX, e.clientY));
       this.triggerDragHaptic();
     }
   };
 
-  private onMouseUp = () => {
+  private readonly onMouseUp = () => {
     this.pointers.delete(-1);
   };
 
-  private onTouchStart = (e: TouchEvent) => {
+  private readonly onTouchStart = (e: TouchEvent) => {
     for (const touch of Array.from(e.changedTouches)) {
       this.pointers.set(touch.identifier, this.getCanvasPos(touch.clientX, touch.clientY));
     }
@@ -98,7 +90,7 @@ export class ParticlePhysicsGame implements Game {
     this.lastHapticTime = performance.now();
   };
 
-  private onTouchMove = (e: TouchEvent) => {
+  private readonly onTouchMove = (e: TouchEvent) => {
     let moved = false;
     for (const touch of Array.from(e.changedTouches)) {
       if (this.pointers.has(touch.identifier)) {
@@ -111,7 +103,7 @@ export class ParticlePhysicsGame implements Game {
     }
   };
 
-  private onTouchEnd = (e: TouchEvent) => {
+  private readonly onTouchEnd = (e: TouchEvent) => {
     for (const touch of Array.from(e.changedTouches)) {
       this.pointers.delete(touch.identifier);
     }

@@ -1,6 +1,4 @@
-import type { Game } from '../../core/Game';
-import { AudioController } from '../../core/AudioController';
-import { HapticController } from '../../core/HapticController';
+import { BaseGame } from '../../core/BaseGame';
 
 interface Bubble {
   x: number;
@@ -9,26 +7,19 @@ interface Bubble {
   popped: boolean;
 }
 
-export class BubbleWrapGame implements Game {
-  private canvas: HTMLCanvasElement | null = null;
-  private ctx: CanvasRenderingContext2D | null = null;
+export class BubbleWrapGame extends BaseGame {
   private bubbles: Bubble[] = [];
-  private audio: AudioController;
-  private haptics: HapticController;
 
   constructor() {
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super();
     this.audio.registerSound('pop', '/sounds/pop.ogg');
   }
 
-  init(canvas: HTMLCanvasElement): void {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
+  protected onInit(): void {
     this.createGrid();
 
-    canvas.addEventListener('touchstart', this.handleTouch);
-    canvas.addEventListener('mousedown', this.handleMouseDown);
+    this.canvas?.addEventListener('touchstart', this.handleTouch);
+    this.canvas?.addEventListener('mousedown', this.handleMouseDown);
   }
 
   private createGrid() {
@@ -51,7 +42,7 @@ export class BubbleWrapGame implements Game {
     }
   }
 
-  private handleTouch = (e: TouchEvent) => {
+  private readonly handleTouch = (e: TouchEvent) => {
     if (!this.canvas) return;
     const rect = this.canvas.getBoundingClientRect();
     Array.from(e.changedTouches).forEach(touch => {
@@ -59,7 +50,7 @@ export class BubbleWrapGame implements Game {
     });
   }
 
-  private handleMouseDown = (e: MouseEvent) => {
+  private readonly handleMouseDown = (e: MouseEvent) => {
     if (!this.canvas) return;
     const rect = this.canvas.getBoundingClientRect();
     this.checkPop(e.clientX - rect.left, e.clientY - rect.top);
@@ -68,7 +59,7 @@ export class BubbleWrapGame implements Game {
   private checkPop(x: number, y: number) {
     this.bubbles.forEach(bubble => {
       if (!bubble.popped) {
-        const dist = Math.sqrt((x - bubble.x) ** 2 + (y - bubble.y) ** 2);
+        const dist = Math.hypot((x - bubble.x), (y - bubble.y));
         if (dist < bubble.radius) {
           bubble.popped = true;
           this.audio.play('pop');
@@ -112,8 +103,7 @@ export class BubbleWrapGame implements Game {
     });
   }
 
-  pause(): void {}
-  resume(): void {}
+
 
   destroy(): void {
     if (this.canvas) {

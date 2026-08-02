@@ -1,36 +1,15 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 
-export class HeavyHandCrank implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-
+export class HeavyHandCrank extends BaseBusyBoardModule {
   private isDragging = false;
   private crankAngle = 0;
   private powerLevel = 0; // 0.0 to 1.0
   private lastTouchAngle = 0;
-
-  private audio: AudioController;
-  private haptics: HapticController;
   private lastTickAngle = 0;
 
   constructor(id: string, x: number, y: number, w: number, h: number) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super(id, x, y, w, h);
   }
-
-  public init(): void {}
-
-  public setPowerState(_hasPower: boolean): void {}
 
   public render(ctx: CanvasRenderingContext2D, px: number, py: number, pw: number, ph: number): void {
     const margin = 10;
@@ -41,7 +20,6 @@ export class HeavyHandCrank implements BusyBoardModule {
 
     const centerX = mx + mw * 0.4; // shift left to leave space for power bar
     const centerY = my + mh / 2 + 10;
-    const crankRadius = Math.min(mw, mh) * 0.22;
 
     // Faceplate - Dark industrial steel grid
     ctx.save();
@@ -173,7 +151,7 @@ export class HeavyHandCrank implements BusyBoardModule {
 
     const dx = x - armTipX;
     const dy = y - armTipY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = Math.hypot(dx, dy);
 
     if (dist <= 25) {
       this.isDragging = true;
@@ -227,7 +205,7 @@ export class HeavyHandCrank implements BusyBoardModule {
     }
   }
 
-  public destroy(): void {}
+
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     if (w < 2 * r) r = w / 2;

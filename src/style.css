@@ -12,12 +12,16 @@
    cochineal red, deep indigo, fibrous string motifs.
    ======================================== */
 :root {
-  /* Color palette — 5 tokens */
-  --color-parchment:  #F5EDD8;   /* warm off-white background  */
-  --color-red:        #B5342A;   /* cochineal red — primary    */
-  --color-indigo:     #2D3875;   /* deep indigo — text/borders */
-  --color-sienna:     #C98B2F;   /* sienna/tan — accent        */
-  --color-cord:       #D4B896;   /* natural cord — decorative  */
+  /* Color palette — 5 tokens in OKLCH space */
+  --color-parchment:  oklch(94% 0.04 85);   /* warm off-white background  */
+  --color-red:        oklch(50% 0.19 25);   /* cochineal red — primary    */
+  --color-indigo:     oklch(32% 0.12 265);  /* deep indigo — text/borders */
+  --color-sienna:     oklch(65% 0.14 65);   /* sienna/tan — accent        */
+  --color-cord:       oklch(78% 0.06 75);   /* natural cord — decorative  */
+
+  /* Dynamic OKLCH Mix Helpers */
+  --color-red-hover:    color-mix(in oklch, var(--color-red) 85%, black);
+  --color-indigo-hover: color-mix(in oklch, var(--color-indigo) 85%, white);
 
   /* Semantic tokens */
   --bg:               var(--color-parchment);
@@ -28,24 +32,24 @@
 
   /* Legacy brand variables for compatibility */
   --bg-color:         var(--bg);
-  --bg-warm:          #EDE0C4;
+  --bg-warm:          oklch(90% 0.05 85);
   --primary-color:    var(--primary);
-  --primary-light:    #E05C4A;
+  --primary-light:    oklch(60% 0.18 25);
   --secondary-color:  var(--fg);
-  --secondary-light:  #4A5BAD;
+  --secondary-light:  oklch(45% 0.12 265);
   --accent-color:     var(--accent);
-  --accent-light:     #F2C46D;
+  --accent-light:     oklch(80% 0.13 75);
   --text-color:       var(--fg);
-  --text-muted:       #6B5E4B;
+  --text-muted:       oklch(45% 0.04 85);
 
   /* String fiber tones */
-  --fiber-1:          #8B6914;
-  --fiber-2:          #6B3D2E;
+  --fiber-1:          oklch(52% 0.12 85);
+  --fiber-2:          oklch(38% 0.09 45);
 
   /* Category tints */
   --sensory-color:    var(--accent-color);
   --stem-color:       var(--secondary-color);
-  --music-color:      #6B2E6B;
+  --music-color:      oklch(35% 0.15 320);
 
   /* Layout tokens */
   --radius:           20px;
@@ -70,9 +74,15 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
 html, body {
-  width: 100%;
-  height: 100%;
+  inline-size: 100%;
+  block-size: 100%;
   overflow: hidden;
   background-color: var(--bg);
   color: var(--fg);
@@ -82,28 +92,36 @@ html, body {
 }
 
 #app {
-  width: 100%;
-  height: 100%;
+  inline-size: 100%;
+  block-size: 100%;
   position: relative;
   display: flex;
   flex-direction: column;
 }
 
-.hidden {
-  display: none !important;
+.hidden,
+#app .hidden,
+nav.hidden,
+canvas.hidden,
+.mobile-tab-bar.hidden,
+.cards-grid a.hidden {
+  display: none;
 }
 
 /* ========================================
    Navigation Shell — Tier 1 "Primary Cord"
    ======================================== */
 #navigation-shell {
-  width: 100%;
-  height: 100%;
+  container-type: inline-size;
+  container-name: navigation-shell;
+  inline-size: 100%;
+  block-size: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 40px 24px;
+  padding-block: 40px;
+  padding-inline: 24px;
   overflow-y: auto;
   background-color: var(--bg);
   background-image:
@@ -119,8 +137,8 @@ html, body {
 
 /* Khipu Cord Line aesthetics */
 .cord-line {
-  width: 90%;
-  height: 4px;
+  inline-size: 90%;
+  block-size: 4px;
   background: linear-gradient(90deg,
     transparent 0%,
     var(--fiber-2) 10%,
@@ -131,7 +149,7 @@ html, body {
     transparent 100%
   );
   border-radius: 2px;
-  margin-bottom: 1.5rem;
+  margin-block-end: 1.5rem;
   position: relative;
 }
 
@@ -140,8 +158,8 @@ html, body {
   content: '';
   position: absolute;
   bottom: -6px;
-  width: 12px;
-  height: 12px;
+  inline-size: 12px;
+  block-size: 12px;
   border-radius: 50%;
   background-color: var(--primary-color);
 }
@@ -151,10 +169,10 @@ html, body {
 /* ---- Home Page Header ---- */
 .menu-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-block-end: 2rem;
   z-index: 1;
-  width: 100%;
-  max-width: 800px;
+  inline-size: 100%;
+  max-inline-size: 800px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -164,10 +182,10 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
+  inline-size: 100%;
   position: relative;
-  min-height: 80px;
-  margin-bottom: 0.5rem;
+  min-block-size: 80px;
+  margin-block-end: 0.5rem;
 }
 
 .nav-left {
@@ -190,12 +208,12 @@ html, body {
 }
 
 .nav-bar .back-btn {
-  margin-bottom: 0;
+  margin-block-end: 0;
 }
 
 #navigation-shell h1 {
   margin: 0;
-  font-size: 3.5rem;
+  font-size: clamp(2.5rem, 5cqi + 1.2rem, 4.2rem);
   font-weight: 600;
   color: var(--primary);
   letter-spacing: -0.5px;
@@ -204,28 +222,33 @@ html, body {
   position: relative;
   z-index: 1;
   line-height: 1;
+  text-wrap: balance;
 }
 
 .tagline {
   font-family: 'Fredoka', sans-serif;
-  font-size: 1.1rem;
+  font-size: clamp(0.95rem, 1cqi + 0.75rem, 1.25rem);
   color: rgba(43, 45, 94, 0.6);
-  margin-top: 0.5rem;
+  margin-block-start: 0.5rem;
   text-align: center;
+  text-wrap: pretty;
 }
 
 /* ---- Rotating Hero Banner ---- */
 .hero-card {
+  container-type: inline-size;
+  container-name: hero-card;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
-  max-width: 800px;
-  background-color: #F1948A;
+  inline-size: 100%;
+  max-inline-size: 800px;
+  background-color: oklch(75% 0.14 25);
   border: 3px solid var(--fg);
   border-radius: 24px;
-  padding: 24px 32px;
-  margin-bottom: 2.5rem;
+  padding-block: 24px;
+  padding-inline: 32px;
+  margin-block-end: 2.5rem;
   position: relative;
   overflow: hidden;
   box-shadow: 0 var(--shadow-depth-lg) 0px var(--fg);
@@ -254,36 +277,39 @@ html, body {
   font-family: 'Fredoka', sans-serif;
   font-weight: 700;
   font-size: 0.75rem;
-  padding: 4px 10px;
+  padding-block: 4px;
+  padding-inline: 10px;
   border-radius: 20px;
-  margin-bottom: 0.75rem;
+  margin-block-end: 0.75rem;
   letter-spacing: 0.5px;
   border: 2px solid var(--fg);
 }
 
 .hero-card h2 {
   font-family: 'Fredoka', sans-serif;
-  font-size: 2.2rem;
+  font-size: clamp(1.8rem, 4cqi + 0.8rem, 2.8rem);
   font-weight: 700;
   color: var(--fg);
-  margin: 0 0 0.25rem 0;
+  margin-block-end: 0.25rem;
+  text-wrap: balance;
 }
 
 .hero-card p#hero-subtitle {
   font-family: 'Fredoka', sans-serif;
-  font-size: 1.2rem;
+  font-size: clamp(1.05rem, 1cqi + 0.8rem, 1.3rem);
   font-weight: 500;
   color: rgba(43, 45, 94, 0.85);
-  margin: 0 0 0.75rem 0;
+  margin-block-end: 0.75rem;
 }
 
 .hero-card p#hero-desc {
   font-family: 'Fredoka', sans-serif;
-  font-size: 0.95rem;
+  font-size: clamp(0.9rem, 1cqi + 0.7rem, 1.1rem);
   color: rgba(43, 45, 94, 0.65);
-  margin: 0 0 1.5rem 0;
-  max-width: 450px;
+  margin-block-end: 1.5rem;
+  max-inline-size: 450px;
   line-height: 1.4;
+  text-wrap: pretty;
 }
 
 .hero-btn-play {
@@ -394,12 +420,14 @@ html, body {
 
 /* ---- Play Portals Grid ---- */
 .portals-grid {
+  container-type: inline-size;
+  container-name: portals-grid;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 24px;
-  width: 100%;
-  max-width: 800px;
-  margin-bottom: 2.5rem;
+  inline-size: 100%;
+  max-inline-size: 800px;
+  margin-block-end: 2.5rem;
   z-index: 2;
 }
 
@@ -675,15 +703,17 @@ html, body {
 
 /* ---- Cards Grid ---- */
 .cards-grid {
+  container-type: inline-size;
+  container-name: cards-grid;
   display: grid;
   grid-template-columns: repeat(auto-fill, 175px);
   justify-content: center;
   gap: 24px;
-  width: 100%;
-  max-width: 800px;
+  inline-size: 100%;
+  max-inline-size: 800px;
   position: relative;
-  z-index: 1;
-  padding-bottom: 40px;
+  z-index: 2;
+  padding-block-end: 40px;
 }
 
 /* ---- Game Card — base style ---- */
@@ -711,7 +741,7 @@ html, body {
 }
 
 .cards-grid a.hidden {
-  display: none !important;
+  display: none;
 }
 
 /* Fibrous left-edge string accent */
@@ -917,7 +947,7 @@ html, body {
 /* Adjust game canvas to account for HUD */
 #game-canvas.with-hud {
   margin-top: 60px;
-  height: calc(100% - 60px) !important;
+  height: calc(100% - 60px);
 }
 
 /* ========================================
@@ -1789,7 +1819,7 @@ body.menu-open #game-canvas {
   }
 
   .mobile-tab-bar.hidden {
-    display: none !important;
+    display: none;
   }
 
   .tab-item {
@@ -1800,6 +1830,8 @@ body.menu-open #game-canvas {
     gap: 2px;
     flex: 1;
     height: 100%;
+    min-inline-size: 44px;
+    min-block-size: 44px;
     color: var(--fg);
     text-decoration: none;
     font-size: 0.72rem;
@@ -1835,4 +1867,39 @@ body.menu-open #game-canvas {
 /* Fallback default desktop styles */
 .mobile-tab-bar {
   display: none;
+}
+
+/* ========================================
+   CSS Container Queries (Isolated Component Layouts)
+   ======================================== */
+@container hero-card (inline-size < 520px) {
+  .hero-card {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+    padding-inline: 20px;
+    padding-block: 20px;
+  }
+  .hero-content {
+    align-items: center;
+    text-align: center;
+  }
+  .hero-interactive-preview {
+    margin-inline-start: 0;
+    margin-block-start: 1.25rem;
+  }
+}
+
+@container portals-grid (inline-size < 480px) {
+  .portals-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@container cards-grid (inline-size < 480px) {
+  .cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+  }
 }

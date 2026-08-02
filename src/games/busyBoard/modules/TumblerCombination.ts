@@ -1,14 +1,6 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 
-export class TumblerCombination implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-
+export class TumblerCombination extends BaseBusyBoardModule {
   private isDragging = false;
   private activeTumblerIdx = -1;
   private dragStartY = 0;
@@ -16,21 +8,12 @@ export class TumblerCombination implements BusyBoardModule {
 
   // Tumbler wheels: 3 columns. Each has 4 shape states (0=Triangle, 1=Circle, 2=Square, 3=Star)
   private tumblerAngles = [0, 0, 0]; // current raw rotation offsets
-  private shapes = ['▲', '●', '■', '★'];
-  private targetCombo = [3, 1, 3]; // ★, ●, ★
+  private readonly shapes = ['▲', '●', '■', '★'];
+  private readonly targetCombo = [3, 1, 3]; // ★, ●, ★
   private isUnlocked = false;
 
-  private audio: AudioController;
-  private haptics: HapticController;
-
   constructor(id: string, x: number, y: number, w: number, h: number) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super(id, x, y, w, h);
   }
 
   public init(): void {
@@ -38,7 +21,7 @@ export class TumblerCombination implements BusyBoardModule {
     this.tumblerAngles = [0.8, 2.5, 1.6];
   }
 
-  public setPowerState(_hasPower: boolean): void {}
+
 
   public render(ctx: CanvasRenderingContext2D, px: number, py: number, pw: number, ph: number): void {
     const margin = 10;
@@ -220,12 +203,9 @@ export class TumblerCombination implements BusyBoardModule {
     return false;
   }
 
-  public handlePointerMove(_x: number, y: number, _px: number, py: number, _pw: number, ph: number): void {
+  public handlePointerMove(_x: number, y: number, _px: number, _py: number, _pw: number, _ph: number): void {
     if (!this.isDragging || this.activeTumblerIdx === -1) return;
 
-    const margin = 10;
-    const my = py + margin;
-    const mh = ph - margin * 2;
     const wheelH = 45;
     const slotStep = wheelH * 0.4;
 
@@ -285,7 +265,7 @@ export class TumblerCombination implements BusyBoardModule {
     }
   }
 
-  public destroy(): void {}
+
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     if (w < 2 * r) r = w / 2;

@@ -1,38 +1,22 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 import type { LuminaryBoardGame } from '../LuminaryBoardGame';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
 
-export class StrobeFrequency implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-  private game: LuminaryBoardGame;
+export class StrobeFrequency extends BaseBusyBoardModule {
+  private readonly game: LuminaryBoardGame;
 
   private value = 0.2; // Slider value: 0.0 to 1.0
   private isDragging = false;
-  private audio: AudioController;
-  private haptics: HapticController;
-
   private ledOn = false;
   private timeSinceFlash = 0;
+  private animPhase = 0;
 
   constructor(id: string, x: number, y: number, w: number, h: number, game: LuminaryBoardGame) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
+    super(id, x, y, w, h);
     this.game = game;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
   }
 
-  public init(): void {}
-
   public render(ctx: CanvasRenderingContext2D, px: number, py: number, pw: number, ph: number): void {
+    this.animPhase += 0.05;
     const theme = this.game.getTheme();
     const margin = 12;
     const mx = px + margin;
@@ -42,26 +26,7 @@ export class StrobeFrequency implements BusyBoardModule {
 
     const centerX = mx + mw / 2;
 
-    // Faceplate
-    ctx.save();
-    ctx.shadowColor = theme === 'paper' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 255, 204, 0.15)';
-    ctx.shadowBlur = 8;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 4;
-
-    if (theme === 'paper') {
-      ctx.fillStyle = '#FAF8F5';
-      ctx.strokeStyle = '#D5C3A6';
-    } else {
-      ctx.fillStyle = '#1A1D24';
-      ctx.strokeStyle = '#00FFCC';
-    }
-    ctx.lineWidth = 3;
-    this.roundRect(ctx, mx, my, mw, mh, 16);
-    ctx.fill();
-    ctx.shadowColor = 'transparent';
-    ctx.stroke();
-    ctx.restore();
+    this.drawOuterFaceplate(ctx, theme, mx, my, mw, mh);
 
     // Title
     ctx.save();
@@ -102,54 +67,31 @@ export class StrobeFrequency implements BusyBoardModule {
     ctx.stroke();
 
     // Slider Knob
-    ctx.fillStyle = theme === 'paper' ? '#EAE6DF' : '#282D37';
-    ctx.strokeStyle = theme === 'paper' ? '#BCAE97' : '#00FFCC';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(sliderX, knobY, 11, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
+  ctx.fillStyle = theme === 'paper' ? '#EAE6DF' : '#282D37';
+  ctx.strokeStyle = theme === 'paper' ? '#BCAE97' : '#00FFCC';
+  ctx.lineWidth = 3;
 
-    // 2. Draw micro-LED Grid (Right Column, 2x3 grid)
-    const ledGridX = mx + mw * 0.55;
-    const ledGridY = my + mh * 0.35;
-    const ledSpacingX = 22;
-    const ledSpacingY = 22;
-
-    const activeColor = theme === 'paper' ? '#FF2D55' : '#00FFCC';
-    const inactiveColor = theme === 'paper' ? '#EAE6DF' : '#282D37';
-
+  if (this.isDragging) {
     ctx.save();
-    for (let row = 0; row < 3; row++) {
-      for (let col = 0; col < 2; col++) {
-        const lx = ledGridX + col * ledSpacingX;
-        const ly = ledGridY + row * ledSpacingY;
-
-        // Draw bezel
-        ctx.strokeStyle = theme === 'paper' ? '#BCAE97' : '#333B44';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(lx, ly, 7, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Fill LED bulb
-        ctx.beginPath();
-        ctx.arc(lx, ly, 5, 0, Math.PI * 2);
-        if (this.ledOn && this.value > 0.02) {
-          ctx.fillStyle = activeColor;
-          if (theme === 'neon') {
-            ctx.shadowColor = '#00FFCC';
-            ctx.shadowBlur = 6;
-          }
-        } else {
-          ctx.fillStyle = inactiveColor;
-          ctx.shadowBlur = 0;
-        }
-        ctx.fill();
-      }
+    for (let i = 0; i < 3; i++) {
+      const offset = ((this.animPhase + i * 0.8) % 2.5) * 9;
+      const alpha = Math.max(0, 1 - offset / 22);
+      ctx.strokeStyle = theme === 'paper' ? `rgba(217, 119, 6, ${alpha * 0.5})` : `rgba(0, 255, 204, ${alpha * 0.6})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(sliderX, knobY, 11 + offset, 0, Math.PI * 2);
+      ctx.stroke();
     }
     ctx.restore();
+  }
+
+  ctx.beginPath();
+  ctx.arc(sliderX, knobY, 11, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+    this.drawLEDGrid(ctx, theme, mx, my, mw, mh);
 
     // Update Strobe interval state
     this.updateFlash();
@@ -171,8 +113,8 @@ export class StrobeFrequency implements BusyBoardModule {
       this.ledOn = !this.ledOn;
       this.timeSinceFlash = 0;
 
-      // Play strobe sound click
-      if (this.ledOn) {
+      // Play strobe sound click only when the slider is being moved or held
+      if (this.ledOn && this.isDragging) {
         const clickPitch = 500 + this.value * 1200;
         this.audio.play('busyboard:dip', clickPitch);
         this.haptics.lightTap();
@@ -196,7 +138,7 @@ export class StrobeFrequency implements BusyBoardModule {
 
     const dx = x - sliderX;
     const dy = y - knobY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = Math.hypot(dx, dy);
 
     if (dist <= 25) {
       this.isDragging = true;
@@ -230,7 +172,80 @@ export class StrobeFrequency implements BusyBoardModule {
     }
   }
 
-  public destroy(): void {}
+
+
+  private drawOuterFaceplate(ctx: CanvasRenderingContext2D, theme: string, mx: number, my: number, mw: number, mh: number): void {
+    ctx.save();
+    ctx.shadowColor = theme === 'paper' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 255, 204, 0.15)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 4;
+
+    if (theme === 'paper') {
+      ctx.fillStyle = '#FAF8F5';
+      ctx.strokeStyle = '#D5C3A6';
+    } else {
+      ctx.fillStyle = '#1A1D24';
+      ctx.strokeStyle = '#00FFCC';
+    }
+    ctx.lineWidth = 3;
+    this.roundRect(ctx, mx, my, mw, mh, 16);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  private drawLEDGrid(ctx: CanvasRenderingContext2D, theme: string, mx: number, my: number, mw: number, mh: number): void {
+    const ledGridX = mx + mw * 0.55;
+    const ledGridY = my + mh * 0.35;
+    const ledSpacingX = 22;
+    const ledSpacingY = 22;
+
+    const activeColor = theme === 'paper' ? '#FF2D55' : '#00FFCC';
+    const inactiveColor = theme === 'paper' ? '#EAE6DF' : '#282D37';
+
+    ctx.save();
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 2; col++) {
+        const lx = ledGridX + col * ledSpacingX;
+        const ly = ledGridY + row * ledSpacingY;
+        this.drawSingleLED(ctx, theme, lx, ly, activeColor, inactiveColor);
+      }
+    }
+    ctx.restore();
+  }
+
+  private drawSingleLED(
+    ctx: CanvasRenderingContext2D,
+    theme: string,
+    lx: number,
+    ly: number,
+    activeColor: string,
+    inactiveColor: string
+  ): void {
+    // Draw bezel
+    ctx.strokeStyle = theme === 'paper' ? '#BCAE97' : '#333B44';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(lx, ly, 7, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Fill LED bulb
+    ctx.beginPath();
+    ctx.arc(lx, ly, 5, 0, Math.PI * 2);
+    if (this.ledOn && this.value > 0.02) {
+      ctx.fillStyle = activeColor;
+      if (theme === 'neon') {
+        ctx.shadowColor = '#00FFCC';
+        ctx.shadowBlur = 6;
+      }
+    } else {
+      ctx.fillStyle = inactiveColor;
+      ctx.shadowBlur = 0;
+    }
+    ctx.fill();
+  }
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     if (w < 2 * r) r = w / 2;

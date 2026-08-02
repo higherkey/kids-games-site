@@ -1,36 +1,22 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 import type { LuminaryBoardGame } from '../LuminaryBoardGame';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
 
-export class RainbowCrossfader implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-  private game: LuminaryBoardGame;
+export class RainbowCrossfader extends BaseBusyBoardModule {
+  private readonly game: LuminaryBoardGame;
   private value = 0.5; // 0.0 to 1.0 (maps to HSL 0-360)
   private isDragging = false;
-  private audio: AudioController;
-  private haptics: HapticController;
   private lastTickValue = 0.5;
   private trailPoints: { x: number; y: number; color: string; alpha: number }[] = [];
 
   constructor(id: string, x: number, y: number, w: number, h: number, game: LuminaryBoardGame) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
+    super(id, x, y, w, h);
     this.game = game;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
   }
 
-  public init(): void {}
+  private animPhase = 0;
 
   public render(ctx: CanvasRenderingContext2D, px: number, py: number, pw: number, ph: number): void {
+    this.animPhase += 0.05;
     const theme = this.game.getTheme();
     const margin = 12;
     const mx = px + margin;
@@ -116,6 +102,22 @@ export class RainbowCrossfader implements BusyBoardModule {
     const knobX = trackStartX + this.value * trackWidth;
     const activeColor = `hsl(${this.value * 360}, 100%, 50%)`;
 
+    // Active HSL Rainbow Ripple Arcs
+    if (this.isDragging) {
+      ctx.save();
+      for (let i = 0; i < 3; i++) {
+        const offset = ((this.animPhase + i * 0.8) % 2.5) * 10;
+        const alpha = Math.max(0, 1 - offset / 25);
+        ctx.strokeStyle = activeColor;
+        ctx.globalAlpha = alpha * 0.7;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(knobX, trackStartY, 14 + offset, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,0.2)';
     ctx.shadowBlur = 6;
@@ -159,7 +161,7 @@ export class RainbowCrossfader implements BusyBoardModule {
 
     const dx = x - knobX;
     const dy = y - trackStartY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = Math.hypot(dx, dy);
 
     if (dist <= 25) {
       this.isDragging = true;
@@ -214,7 +216,7 @@ export class RainbowCrossfader implements BusyBoardModule {
     }
   }
 
-  public destroy(): void {}
+
 
   private updateTrail() {
     // Fade out and remove old trail points

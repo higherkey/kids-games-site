@@ -1,11 +1,11 @@
-import type { Game } from '../../core/Game';
-import { AudioController } from '../../core/AudioController';
-import { HapticController } from '../../core/HapticController';
+import { BaseGame } from '../../core/BaseGame';
 import { Engine, World, Bodies, Body, Vector, Events } from 'matter-js';
+
+type SandboxPartType = 'ramp' | 'bumper' | 'booster';
 
 interface SandboxPart {
   id: number;
-  type: 'ramp' | 'bumper' | 'booster';
+  type: SandboxPartType;
   body: Body;
   width?: number;
   height?: number;
@@ -25,12 +25,7 @@ interface Particle {
   maxLife: number;
 }
 
-export class MarblePipeGame implements Game {
-  private canvas: HTMLCanvasElement | null = null;
-  private ctx: CanvasRenderingContext2D | null = null;
-  private audio: AudioController;
-  private haptics: HapticController;
-
+export class MarblePipeGame extends BaseGame {
   private engine: Engine | null = null;
   private world: World | null = null;
 
@@ -49,21 +44,19 @@ export class MarblePipeGame implements Game {
   private gameWon = false;
   private winAnimationTimer = 0;
 
-  private toolboxHeight = 90;
-  private toolboxButtons: Array<{ type: 'ramp' | 'bumper' | 'booster'; label: string; x: number; y: number; width: number; height: number; color: string }> = [];
+  private readonly toolboxHeight = 90;
+  private toolboxButtons: Array<{ type: SandboxPartType; label: string; x: number; y: number; width: number; height: number; color: string }> = [];
 
   constructor() {
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super();
     this.audio.registerSound('clink', '/sounds/pop.ogg');
     this.audio.registerSound('boing', '/sounds/pop.ogg');
     this.audio.registerSound('win', '/sounds/pop.ogg');
   }
 
-  init(canvas: HTMLCanvasElement): void {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
-    
+  protected onInit(): void {
+    if (!this.canvas) return;
+
     this.marbles = [];
     this.parts = [];
     this.particles = [];
@@ -76,12 +69,12 @@ export class MarblePipeGame implements Game {
     this.engine.gravity.y = 1.0;
 
     const wallOptions = { isStatic: true, friction: 0.1 };
-    const leftWall = Bodies.rectangle(-10, canvas.height / 2, 20, canvas.height, wallOptions);
-    const rightWall = Bodies.rectangle(canvas.width + 10, canvas.height / 2, 20, canvas.height, wallOptions);
+    const leftWall = Bodies.rectangle(-10, this.canvas.height / 2, 20, this.canvas.height, wallOptions);
+    const rightWall = Bodies.rectangle(this.canvas.width + 10, this.canvas.height / 2, 20, this.canvas.height, wallOptions);
     World.add(this.world, [leftWall, rightWall]);
 
     this.startingFunnel = {
-      x: canvas.width * 0.25,
+      x: this.canvas.width * 0.25,
       y: 90,
       width: 80,
       height: 60
@@ -91,12 +84,12 @@ export class MarblePipeGame implements Game {
     this.setupToolbox();
     this.setupCollisionHandlers();
 
-    canvas.addEventListener('touchstart', this.handleTouchStart, { passive: false });
-    canvas.addEventListener('touchmove', this.handleTouchMove, { passive: false });
-    canvas.addEventListener('touchend', this.handleTouchEnd, { passive: false });
-    canvas.addEventListener('mousedown', this.handleMouseDown);
-    canvas.addEventListener('mousemove', this.handleMouseMove);
-    canvas.addEventListener('mouseup', this.handleMouseUp);
+    this.canvas.addEventListener('touchstart', this.handleTouchStart, { passive: false });
+    this.canvas.addEventListener('touchmove', this.handleTouchMove, { passive: false });
+    this.canvas.addEventListener('touchend', this.handleTouchEnd, { passive: false });
+    this.canvas.addEventListener('mousedown', this.handleMouseDown);
+    this.canvas.addEventListener('mousemove', this.handleMouseMove);
+    this.canvas.addEventListener('mouseup', this.handleMouseUp);
   }
 
   private setupGoalCup() {
@@ -146,7 +139,7 @@ export class MarblePipeGame implements Game {
 
         const otherBody = marble.id === bodyA.id ? bodyB : bodyA;
 
-        if (this.goalCupBody && otherBody.id === this.goalCupBody.id) {
+        if (otherBody.id === this.goalCupBody?.id) {
           this.triggerWin();
           return;
         }
@@ -172,7 +165,7 @@ export class MarblePipeGame implements Game {
     });
   }
 
-  private addPart(type: 'ramp' | 'bumper' | 'booster') {
+  private addPart(type: SandboxPartType) {
     if (!this.canvas || !this.world) return;
 
     const spawnX = this.canvas.width / 2;
@@ -244,35 +237,35 @@ export class MarblePipeGame implements Game {
     this.haptics.lightTap();
   }
 
-  private handleMouseDown = (e: MouseEvent) => {
+  private readonly handleMouseDown = (e: MouseEvent) => {
     const pos = this.getCanvasPos(e.clientX, e.clientY);
     this.startPress(pos.x, pos.y);
   };
 
-  private handleMouseMove = (e: MouseEvent) => {
+  private readonly handleMouseMove = (e: MouseEvent) => {
     const pos = this.getCanvasPos(e.clientX, e.clientY);
     this.movePress(pos.x, pos.y);
   };
 
-  private handleMouseUp = () => {
+  private readonly handleMouseUp = () => {
     this.endPress();
   };
 
-  private handleTouchStart = (e: TouchEvent) => {
+  private readonly handleTouchStart = (e: TouchEvent) => {
     e.preventDefault();
     const touch = e.changedTouches[0];
     const pos = this.getCanvasPos(touch.clientX, touch.clientY);
     this.startPress(pos.x, pos.y);
   };
 
-  private handleTouchMove = (e: TouchEvent) => {
+  private readonly handleTouchMove = (e: TouchEvent) => {
     e.preventDefault();
     const touch = e.changedTouches[0];
     const pos = this.getCanvasPos(touch.clientX, touch.clientY);
     this.movePress(pos.x, pos.y);
   };
 
-  private handleTouchEnd = (e: TouchEvent) => {
+  private readonly handleTouchEnd = (e: TouchEvent) => {
     e.preventDefault();
     this.endPress();
   };
@@ -287,59 +280,70 @@ export class MarblePipeGame implements Game {
     if (!this.canvas) return;
 
     if (y >= this.canvas.height - this.toolboxHeight) {
-      for (const btn of this.toolboxButtons) {
-        if (x >= btn.x && x <= btn.x + btn.width && y >= btn.y && y <= btn.y + btn.height) {
-          this.addPart(btn.type);
-          return;
-        }
-      }
+      this.handleToolboxPress(x, y);
       return;
     }
 
     if (y < 60) {
-      if (x >= 20 && x <= 150) {
-        this.spawnMarble();
-        return;
-      }
-      if (x >= this.canvas.width - 120 && x <= this.canvas.width - 20) {
-        this.clearBoard();
+      if (this.handleHeaderPress(x)) return;
+    }
+
+    if (this.selectedPart && this.handleSelectedPartMenu(x, y)) return;
+
+    this.pickOrDeselectPart(x, y);
+  }
+
+  private handleToolboxPress(x: number, y: number): void {
+    for (const btn of this.toolboxButtons) {
+      if (x >= btn.x && x <= btn.x + btn.width && y >= btn.y && y <= btn.y + btn.height) {
+        this.addPart(btn.type);
         return;
       }
     }
+  }
 
-    if (this.selectedPart) {
-      const menuPos = this.getPartMenuPosition(this.selectedPart);
-      const distRot = Math.sqrt((x - menuPos.x) ** 2 + (y - menuPos.y) ** 2);
-      if (distRot < 20) {
-        this.rotatePart(this.selectedPart);
-        return;
-      }
-      const distDel = Math.sqrt((x - (menuPos.x + 45)) ** 2 + (y - menuPos.y) ** 2);
-      if (distDel < 20) {
-        this.deletePart(this.selectedPart);
-        return;
-      }
+  private handleHeaderPress(x: number): boolean {
+    if (!this.canvas) return false;
+    if (x >= 20 && x <= 150) {
+      this.spawnMarble();
+      return true;
     }
+    if (x >= this.canvas.width - 120 && x <= this.canvas.width - 20) {
+      this.clearBoard();
+      return true;
+    }
+    return false;
+  }
 
-    let clickedOnPart = false;
+  private handleSelectedPartMenu(x: number, y: number): boolean {
+    if (!this.selectedPart) return false;
+    const menuPos = this.getPartMenuPosition(this.selectedPart);
+    if (Math.hypot(x - menuPos.x, y - menuPos.y) < 20) {
+      this.rotatePart(this.selectedPart);
+      return true;
+    }
+    if (Math.hypot(x - (menuPos.x + 45), y - menuPos.y) < 20) {
+      this.deletePart(this.selectedPart);
+      return true;
+    }
+    return false;
+  }
+
+  private pickOrDeselectPart(x: number, y: number): void {
     for (let i = this.parts.length - 1; i >= 0; i--) {
       const part = this.parts[i];
-      const dist = Math.sqrt((x - part.body.position.x) ** 2 + (y - part.body.position.y) ** 2);
+      const dist = Math.hypot(x - part.body.position.x, y - part.body.position.y);
       const hitRadius = part.type === 'bumper' ? part.radius! : 35;
 
       if (dist < hitRadius) {
         this.selectedPart = part;
         this.draggingPart = part;
         this.dragOffset = { x: x - part.body.position.x, y: y - part.body.position.y };
-        clickedOnPart = true;
         this.haptics.lightTap();
-        break;
+        return;
       }
     }
-
-    if (!clickedOnPart) {
-      this.selectedPart = null;
-    }
+    this.selectedPart = null;
   }
 
   private movePress(x: number, y: number) {
@@ -438,7 +442,7 @@ export class MarblePipeGame implements Game {
     this.parts.forEach(part => {
       if (part.type === 'booster') {
         this.marbles.forEach(marble => {
-          const dist = Math.sqrt((marble.position.x - part.body.position.x) ** 2 + (marble.position.y - part.body.position.y) ** 2);
+          const dist = Math.hypot((marble.position.x - part.body.position.x), (marble.position.y - part.body.position.y));
           if (dist < 45) {
             const forceDirection = part.body.angle;
             const forceStrength = 0.008;
