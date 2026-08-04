@@ -15,11 +15,12 @@
   - [x] Create `.agents/sound-design-rules.md` and add **Sound Design & Auditory Philosophy** section to `README.md`.
   - [x] Implement intelligent multi-cell boundary line segment checking in `BaseBusyBoardGame.ts` (`drawGridLines`) so grid lines never cut across multi-cell modules (`w > 1` or `h > 1`).
   - [x] Create `StereoPannerModule.ts` (031) with gentle wind-chime audio loop (fixed pitch 329.63Hz & volume 0.25, ONLY stereo panning changes dynamically).
-  - [x] Add subtle acoustic soundwave / aura ripple visual touches across ALL modules when interacted with.
   - [x] Consolidate `ToneAudioEngine` capabilities into `ToneAudioController.ts` (`updateLightBoardTone`, `stopLightBoardTone`, `playSoundBoardNote`, `playTactileClick`).
   - [x] Wire global `pointerdown`/`touchstart` event listener in `main.ts` for Tone.js audio context initialization.
   - [x] Connect `updateLightBoardTone` and `stopLightBoardTone` to `RGBLightModule.ts`, `RainbowCrossfader.ts`, and `RotaryDimmer.ts`.
   - [x] Connect `playSoundBoardNote` (Octave 5 glockenspiel-like pentatonic chords) to `SoundBoardGame.ts`.
+  - [x] Eliminate generic copy-pasted target rings across all modules and implement tailored visual cues (glowing rotary arc gauges, fader spectrum ribbons, directional light cones, rhythmic frequency pulse bars, and soft ambient radial auras).
+  - [x] Add paper/neon theme support to `RockerSwitch.ts` and set all `StereoPannerModule.ts` text labels to `Fredoka, sans-serif`.
   - [x] Verify build (`npm run build`) and test suite (`npm run test`).
 
 - **File List**:
@@ -35,6 +36,12 @@
   - `src/games/busyBoard/modules/RotaryDimmer.ts` (MODIFY)
   - `src/games/busyBoard/modules/RainbowCrossfader.ts` (MODIFY)
   - `src/games/busyBoard/modules/RGBLightModule.ts` (MODIFY)
+  - `src/games/busyBoard/modules/StrobeFrequency.ts` (MODIFY)
+  - `src/games/busyBoard/modules/ShadowProjection.ts` (MODIFY)
+  - `src/games/busyBoard/modules/HaloExpander.ts` (MODIFY)
+  - `src/games/busyBoard/modules/DualFingerGradient.ts` (MODIFY)
+  - `src/games/busyBoard/modules/RockerSwitch.ts` (MODIFY)
+  - `src/games/busyBoard/modules/StereoPannerModule.ts` (NEW)
   - `src/games/soundBoard/SoundBoardGame.ts` (MODIFY)
   - `.agents/sound-design-rules.md` (NEW)
 
@@ -47,6 +54,7 @@
   - Connected `updateLightBoardTone` / `stopLightBoardTone` for continuous pitch glissando & volume scaling across light board sliders.
   - Connected octave 5 glockenspiel-like pentatonic notes for `SoundBoardGame`.
   - Preserved Howler WAV sample triggers on tactile switches (`RockerSwitch`, `DIPArray`, `ContrastInverter`, `BreakerLever`) to prevent double-click artifacts.
+  - Redesigned visual feedback to use bespoke geometry-aligned visual cues across all interactive modules.
   - Build & Tests: 100% pass rate (61/61 unit tests passing).
 
 ## 4. Issues and Out of Scope
