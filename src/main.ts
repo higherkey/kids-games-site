@@ -268,7 +268,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainTagline = document.getElementById('main-tagline');
     const backBtn = document.getElementById('back-to-portals-btn');
 
-    if (backBtn) backBtn.classList.remove('hidden');
+    if (backBtn) {
+      backBtn.classList.remove('hidden');
+      const spanLabel = backBtn.querySelector('span');
+      if (spanLabel) spanLabel.textContent = 'All Portals';
+      (backBtn as HTMLAnchorElement).setAttribute('aria-label', 'Back to All Portals');
+    }
 
     const portalTitles: Record<string, string> = {
       sandbox: 'Sandbox',
@@ -410,11 +415,30 @@ function startGame(gameId: string, canvas: HTMLCanvasElement) {
   }
 
   const gameName = gameInfo.name;
+  const portalId = gameInfo.portal;
+  const portalTitles: Record<string, string> = {
+    sandbox: 'Sandbox',
+    workshop: 'Workshop',
+    lab: 'Lab',
+    busyBoard: 'Busy Board'
+  };
+  const portalName = portalTitles[portalId] || 'Portal';
 
   // Create the unified Game UI
   gameUI = new GameUI({
     gameName,
-    onHome: () => exitToHome(),
+    portalId,
+    portalName,
+    onPortalBack: () => {
+      if (portalId) {
+        router?.navigate(`/portal/${portalId}`);
+      } else {
+        router?.navigate('/');
+      }
+    },
+    onHome: () => {
+      router?.navigate('/');
+    },
     onPause: () => pauseGame(),
     onResume: () => resumeGame(),
     onRestart: () => restartGame(gameId, canvas),

@@ -12,6 +12,15 @@ import { ParticlePhysicsGame } from '../games/particlePhysics/ParticlePhysicsGam
 import { SwitchboardGame } from '../games/busyBoard/SwitchboardGame';
 import { LuminaryBoardGame } from '../games/busyBoard/LuminaryBoardGame';
 import { MechanicalWorkshopGame } from '../games/busyBoard/MechanicalWorkshopGame';
+import { CloudShapeGame } from '../games/cloudShape/CloudShapeGame';
+import { LiteBriteGame } from '../games/liteBrite/LiteBriteGame';
+import { AnimalChoirGame } from '../games/animalChoir/AnimalChoirGame';
+import { EquationTowerGame } from '../games/equationTower/EquationTowerGame';
+import { VibeCoderGame } from '../games/vibeCoder/VibeCoderGame';
+import { TrashSorcererGame } from '../games/trashSorcerer/TrashSorcererGame';
+import { KhipuSynthGame } from '../games/khipuSynth/KhipuSynthGame';
+import { SoundWaveStudioGame } from '../games/busyBoard/SoundWaveStudioGame';
+import { TypographyBoardGame } from '../games/busyBoard/TypographyBoardGame';
 
 export interface GameRegistration {
   id: string;
@@ -170,6 +179,96 @@ export class GameRegistry {
         category: 'sensory',
         desc: 'Spin interlocking gears, plug stereo cords, drag latches, and twist combination tumblers!',
         constructorRef: MechanicalWorkshopGame
+      },
+      {
+        id: 'cloudShape',
+        name: 'Cloud Shape Finder',
+        subtitle: 'Procedural Sky & Animals',
+        portal: 'sandbox',
+        icon: 'cloud',
+        category: 'sensory',
+        desc: 'Tap and trace soft puffy clouds to morph them into cute animal outlines!',
+        constructorRef: CloudShapeGame
+      },
+      {
+        id: 'liteBrite',
+        name: 'Digital Lite Brite',
+        subtitle: 'Glowing Peg Matrix',
+        portal: 'workshop',
+        icon: 'sparkles',
+        category: 'sensory',
+        desc: 'Trace templates and design glowing neon art with colorful acrylic pegs!',
+        constructorRef: LiteBriteGame
+      },
+      {
+        id: 'animalChoir',
+        name: 'Animal Choir',
+        subtitle: 'Rhythm Grid Sequencer',
+        portal: 'workshop',
+        icon: 'music',
+        category: 'brain',
+        desc: 'Create rhythmic songs with a grid of singing animal cards!',
+        constructorRef: AnimalChoirGame
+      },
+      {
+        id: 'equationTower',
+        name: 'Equation Tower',
+        subtitle: 'Physics Math Balance',
+        portal: 'lab',
+        icon: 'layers',
+        category: 'brain',
+        desc: 'Stack physics blocks on a balance scale to hit target sum goals without tumbling!',
+        constructorRef: EquationTowerGame
+      },
+      {
+        id: 'vibeCoder',
+        name: 'Vibe Coder',
+        subtitle: 'Visual Logic Pathfinding',
+        portal: 'lab',
+        icon: 'code',
+        category: 'brain',
+        desc: 'Queue step arrows to guide your character through mazes to collect treats!',
+        constructorRef: VibeCoderGame
+      },
+      {
+        id: 'trashSorcerer',
+        name: 'Trash Sorcerer',
+        subtitle: 'Physics Flick Sorting',
+        portal: 'lab',
+        icon: 'trash',
+        category: 'action',
+        desc: 'Flick items into magic recycling, compost, and trash portals!',
+        constructorRef: TrashSorcererGame
+      },
+      {
+        id: 'khipuSynth',
+        name: 'Khipu Synth',
+        subtitle: '8-Track Loop & Music Studio',
+        portal: 'lab',
+        icon: 'sliders',
+        category: 'brain',
+        desc: 'Build 8-track loop sequences, customize instruments and BPM, and record audio!',
+        constructorRef: KhipuSynthGame
+      },
+      {
+        id: 'soundWaveStudio',
+        name: 'Sound & Wave Studio',
+        subtitle: 'Acoustic Mechanics',
+        portal: 'busyBoard',
+        icon: 'activity',
+        category: 'sensory',
+        desc: 'Explore pitch ribbons, siren handles, formant shifters, morse keys, and plungers!',
+        constructorRef: SoundWaveStudioGame
+      },
+      {
+        id: 'typographyBoard',
+        name: 'Typography & Interface',
+        subtitle: 'Tactile Text Controls',
+        portal: 'busyBoard',
+        icon: 'type',
+        category: 'sensory',
+        desc: 'Interact with odometer tumblers, font weight sliders, word gravity, and case toggles!',
+        constructorRef: TypographyBoardGame
       }
     ];
 

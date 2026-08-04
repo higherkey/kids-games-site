@@ -3,13 +3,16 @@ import './GameHeader.css';
 
 export interface GameHeaderConfig {
   gameName: string;
+  portalId?: string;
+  portalName?: string;
+  onPortalBack?: () => void;
   onHome: () => void;
   onMenuToggle: () => void;
 }
 
 /**
  * GameHeader - A reusable header component for all games.
- * Displays a home button/logo on the left and a menu toggle on the right.
+ * Displays intelligent back-to-portal and home navigation on the left, and settings menu toggle on the right.
  */
 export class GameHeader {
   private element: HTMLElement;
@@ -25,11 +28,21 @@ export class GameHeader {
     header.id = 'game-header';
     header.className = 'game-header';
     
+    const portalName = this.config.portalName || 'Portal';
+    const hasPortalBack = !!this.config.onPortalBack;
+
     header.innerHTML = `
-      <button class="header-btn home-btn" title="Go Home" aria-label="Go Home">
-        <span class="header-icon">${Icons.home}</span>
-        <span class="header-logo">Kipu</span>
-      </button>
+      <div class="header-nav-left">
+        ${hasPortalBack ? `
+          <button class="header-btn portal-back-btn" title="Back to ${portalName}" aria-label="Back to ${portalName}">
+            <span class="header-icon">${Icons.back}</span>
+            <span class="header-label">${portalName}</span>
+          </button>
+        ` : ''}
+        <button class="header-btn home-btn" title="Go Home" aria-label="Go Home">
+          <span class="header-icon">${Icons.home}</span>
+        </button>
+      </div>
       <span class="header-title">${this.config.gameName}</span>
       <button class="header-btn menu-btn" title="Menu" aria-label="Open Menu">
         <span class="header-icon">${Icons.menu}</span>
@@ -37,6 +50,14 @@ export class GameHeader {
     `;
 
     // Event listeners
+    if (hasPortalBack) {
+      header.querySelector('.portal-back-btn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.config.onPortalBack?.();
+      });
+    }
+
     header.querySelector('.home-btn')?.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();

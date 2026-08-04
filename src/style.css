@@ -10,12 +10,12 @@
    Design Tokens
    ---------------------------------------- */
 :root {
-  /* Color palette — 5 tokens */
-  --color-parchment:  #F4ECD8;   /* warm off-white background  */
-  --color-red:        #C0392B;   /* cochineal red — primary    */
-  --color-indigo:     #2B2D5E;   /* deep indigo — text/borders */
-  --color-sienna:     #A0522D;   /* sienna/tan — accent        */
-  --color-cord:       #D4B896;   /* natural cord — decorative  */
+  /* OKLCH Perceptually Uniform Color Palette */
+  --color-parchment:  oklch(94% 0.03 85);   /* warm off-white background  */
+  --color-red:        oklch(52% 0.22 28);   /* cochineal red — primary    */
+  --color-indigo:     oklch(28% 0.09 275);  /* deep indigo — text/borders */
+  --color-sienna:     oklch(48% 0.13 55);   /* sienna/tan — accent        */
+  --color-cord:       oklch(78% 0.07 80);   /* natural cord — decorative  */
 
   /* Semantic tokens */
   --bg:               var(--color-parchment);
@@ -29,7 +29,7 @@
   --radius-sm:        12px;
   --radius-pill:      999px;
 
-  /* Shadow depth (press-down buttons) */
+  /* Shadow depth (hard offset tactile buttons) */
   --shadow-depth:     4px;
   --shadow-depth-lg:  6px;
 
@@ -58,6 +58,13 @@ html, body {
   font-family: 'Fredoka', sans-serif;
   touch-action: none;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Modern Accessibility: Visible Focus Rings for Keyboard Navigation */
+a:focus-visible, button:focus-visible, [role="menuitem"]:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
 }
 
 #app {
@@ -152,6 +159,7 @@ html, body {
   position: relative;
   z-index: 1;
   line-height: 1;
+  text-wrap: balance;
 }
 
 .tagline {
@@ -160,6 +168,7 @@ html, body {
   color: rgba(43, 45, 94, 0.6);
   margin-top: 0.5rem;
   text-align: center;
+  text-wrap: pretty;
 }
 
 /* ---- Rotating Hero Banner ---- */
@@ -350,6 +359,8 @@ html, body {
   max-width: 800px;
   margin-bottom: 2.5rem;
   z-index: 2;
+  container-type: inline-size;
+  container-name: portal-grid;
 }
 
 /* ---- Portal Card Base Style ---- */
@@ -368,7 +379,14 @@ html, body {
   box-shadow: 0 var(--shadow-depth-lg) 0px var(--fg);
   cursor: pointer;
   overflow: hidden;
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, background-color 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, background-color 0.3s ease, opacity 0.4s ease;
+}
+
+@starting-style {
+  .portal-card {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
 }
 
 /* Fibrous top string overlay on cards */
@@ -421,6 +439,7 @@ html, body {
   font-size: 1.6rem;
   font-weight: 700;
   line-height: 1.2;
+  text-wrap: balance;
 }
 
 .portal-subtitle {
@@ -430,6 +449,7 @@ html, body {
   color: rgba(43, 45, 94, 0.6);
   text-align: center;
   line-height: 1.3;
+  text-wrap: pretty;
 }
 
 /* ---- Portal Card Colors & Micro-Animations ---- */
@@ -528,33 +548,42 @@ html, body {
 .back-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  height: 40px;
   background-color: var(--color-parchment);
   color: var(--fg);
   border: 2px solid var(--fg);
   border-radius: var(--radius-sm);
-  padding: 8px 16px;
+  padding: 0 14px;
   font-family: 'Fredoka', sans-serif;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   text-decoration: none;
-  box-shadow: 0 var(--shadow-depth) 0px var(--fg);
+  box-shadow: 0 3px 0px var(--fg);
   cursor: pointer;
-  transition: transform 0.08s ease, box-shadow 0.08s ease;
-  margin-bottom: 1.5rem;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.15s ease;
+  margin-bottom: 0;
+  white-space: nowrap;
 }
 
 .back-btn svg {
+  width: 18px;
+  height: 18px;
   transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.back-btn:hover {
+  background-color: var(--cord);
 }
 
 .back-btn:hover svg {
-  transform: translateX(-4px);
+  transform: translateX(-3px);
 }
 
 .back-btn:active {
   transform: translateY(2px);
-  box-shadow: 0 2px 0px var(--fg);
+  box-shadow: 0 1px 0px var(--fg);
 }
 
 /* ---- Tier 2 Portal Theme Backgrounds ---- */
@@ -994,14 +1023,16 @@ html, body {
     left: 0;
     right: 0;
     height: 64px;
-    background-color: var(--color-parchment);
+    background-color: rgba(244, 236, 216, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-top: 3px solid var(--fg);
     display: flex;
     justify-content: space-around;
     align-items: center;
     z-index: 100;
     padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 -4px 12px rgba(43, 45, 94, 0.08);
   }
 
   .mobile-tab-bar.hidden {
