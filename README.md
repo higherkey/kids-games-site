@@ -3,7 +3,7 @@
 > A tactile, sensory, and educational mini-game suite for children — inspired by the Andean khipu, the knot-based recording system of the Incan Empire.
 
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/richardlitt/standard-readme)
-[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=flat-square)](https://kipu-games.vercel.app/)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=flat-square)](https://kipu-games.eight1fivedesign.com/)
 [![Build Status](https://github.com/higherkey/kipu/actions/workflows/build.yml/badge.svg)](https://github.com/higherkey/kipu/actions/workflows/build.yml)
 [![Vite 8](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite)](https://vite.dev/)
 [![TypeScript 6](https://img.shields.io/badge/TypeScript-6-007ACC?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
