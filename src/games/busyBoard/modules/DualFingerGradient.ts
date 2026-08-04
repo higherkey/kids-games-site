@@ -124,19 +124,18 @@ export class DualFingerGradient extends BaseBusyBoardModule {
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
 
-    // Active Fluid Aura Ripples around active node
+    // Tailored Fluid Energy Node Halo (only while dragging)
     if (this.isDragging && this.draggedNode) {
       const activePt = this.draggedNode === 'p1' ? this.p1 : this.p2;
       ctx.save();
-      for (let i = 0; i < 3; i++) {
-        const offset = ((this.animPhase + i * 0.8) % 2.5) * 10;
-        const alpha = Math.max(0, 1 - offset / 25);
-        ctx.strokeStyle = theme === 'paper' ? `rgba(255, 255, 255, ${alpha * 0.7})` : `rgba(0, 255, 204, ${alpha * 0.8})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(activePt.x, activePt.y, 12 + offset, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+      const nodeGlow = ctx.createRadialGradient(activePt.x, activePt.y, 4, activePt.x, activePt.y, 24);
+      const glowColor = theme === 'paper' ? 'rgba(230, 126, 34, ' : 'rgba(0, 255, 204, ';
+      nodeGlow.addColorStop(0, glowColor + '0.6)');
+      nodeGlow.addColorStop(1, glowColor + '0)');
+      ctx.fillStyle = nodeGlow;
+      ctx.beginPath();
+      ctx.arc(activePt.x, activePt.y, 24, 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
     }
 

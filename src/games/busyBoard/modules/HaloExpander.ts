@@ -69,19 +69,18 @@ export class HaloExpander extends BaseBusyBoardModule {
   const activeColor = theme === 'paper' ? 'rgba(255, 140, 0, 0.45)' : 'rgba(0, 255, 204, 0.5)';
   const outerGlow = theme === 'paper' ? 'rgba(255, 200, 100, 0)' : 'rgba(0, 150, 255, 0)';
 
-  if (this.isDragging) {
-    ctx.save();
-    for (let i = 0; i < 3; i++) {
-      const offset = ((this.animPhase + i * 0.8) % 2.5) * 10;
-      const alpha = Math.max(0, 1 - offset / 25);
-      ctx.strokeStyle = theme === 'paper' ? `rgba(255, 140, 0, ${alpha * 0.6})` : `rgba(0, 255, 204, ${alpha * 0.7})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(centerX, haloY, this.haloRadius + offset, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
+  // Tailored Always-on Breathing Halo Glow Ring
+  ctx.save();
+  const breath = Math.sin(this.animPhase * 2) * 3;
+  const glowRadius = this.haloRadius + 4 + breath;
+  ctx.shadowColor = theme === 'paper' ? '#FF8C00' : '#00FFCC';
+  ctx.shadowBlur = 10;
+  ctx.strokeStyle = theme === 'paper' ? 'rgba(255, 140, 0, 0.4)' : 'rgba(0, 255, 204, 0.5)';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(centerX, haloY, glowRadius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
 
     ctx.save();
     const grad = ctx.createRadialGradient(centerX, haloY, 2, centerX, haloY, this.haloRadius);

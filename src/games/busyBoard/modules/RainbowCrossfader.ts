@@ -126,19 +126,16 @@ export class RainbowCrossfader extends BaseBusyBoardModule {
     const knobX = trackStartX + this.value * trackWidth;
     const activeColor = `hsl(${this.value * 360}, 100%, 50%)`;
 
-    // Active HSL Rainbow Ripple Arcs
+    // Tailored HSL Spectral Knob Aura (only while dragging)
     if (this.isDragging) {
       ctx.save();
-      for (let i = 0; i < 3; i++) {
-        const offset = ((this.animPhase + i * 0.8) % 2.5) * 10;
-        const alpha = Math.max(0, 1 - offset / 25);
-        ctx.strokeStyle = activeColor;
-        ctx.globalAlpha = alpha * 0.7;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(knobX, trackStartY, 14 + offset, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+      const auraGrad = ctx.createRadialGradient(knobX, trackStartY, 4, knobX, trackStartY, 22);
+      auraGrad.addColorStop(0, activeColor);
+      auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = auraGrad;
+      ctx.beginPath();
+      ctx.arc(knobX, trackStartY, 22, 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
     }
 

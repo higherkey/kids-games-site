@@ -201,19 +201,29 @@ export class RGBLightModule extends BaseBusyBoardModule {
       const knobY = sliderEndY - (val / 255) * sliderHeight;
       const knobR = 11;
 
-      // Active Channel Ripple Arcs
+      // Active Channel Beam & Knob Halo (tailored visual cue while sliding)
       if (this.activeSlider === channel) {
         ctx.save();
-        for (let i = 0; i < 3; i++) {
-          const offset = ((this.animPhase + i * 0.8) % 2.5) * 9;
-          const alpha = Math.max(0, 1 - offset / 22);
-          ctx.strokeStyle = colors[channel];
-          ctx.globalAlpha = alpha * 0.7;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(sliderX, knobY, knobR + offset, 0, Math.PI * 2);
-          ctx.stroke();
-        }
+        const beamGrad = ctx.createLinearGradient(sliderX, sliderEndY, sliderX, knobY);
+        beamGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        beamGrad.addColorStop(1, colors[channel]);
+        ctx.strokeStyle = beamGrad;
+        ctx.shadowColor = colors[channel];
+        ctx.shadowBlur = 10;
+        ctx.lineWidth = 14;
+        ctx.beginPath();
+        ctx.moveTo(sliderX, sliderEndY);
+        ctx.lineTo(sliderX, knobY);
+        ctx.stroke();
+
+        // Soft halo aura around knob
+        const knobGlow = ctx.createRadialGradient(sliderX, knobY, 4, sliderX, knobY, 22);
+        knobGlow.addColorStop(0, colors[channel]);
+        knobGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = knobGlow;
+        ctx.beginPath();
+        ctx.arc(sliderX, knobY, 22, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
       }
 

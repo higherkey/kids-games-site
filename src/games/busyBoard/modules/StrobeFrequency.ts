@@ -73,15 +73,15 @@ export class StrobeFrequency extends BaseBusyBoardModule {
 
   if (this.isDragging) {
     ctx.save();
-    for (let i = 0; i < 3; i++) {
-      const offset = ((this.animPhase + i * 0.8) % 2.5) * 9;
-      const alpha = Math.max(0, 1 - offset / 22);
-      ctx.strokeStyle = theme === 'paper' ? `rgba(217, 119, 6, ${alpha * 0.5})` : `rgba(0, 255, 204, ${alpha * 0.6})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(sliderX, knobY, 11 + offset, 0, Math.PI * 2);
-      ctx.stroke();
-    }
+    const pulseSpeed = 1 + this.value * 8;
+    const pulseAlpha = (Math.sin(this.animPhase * pulseSpeed) + 1) * 0.4;
+    ctx.strokeStyle = theme === 'paper' ? `rgba(217, 119, 6, ${pulseAlpha})` : `rgba(0, 255, 204, ${pulseAlpha})`;
+    ctx.lineWidth = 3;
+    const barWidth = 16 + this.value * 12;
+    ctx.beginPath();
+    ctx.moveTo(sliderX - barWidth, knobY);
+    ctx.lineTo(sliderX + barWidth, knobY);
+    ctx.stroke();
     ctx.restore();
   }
 

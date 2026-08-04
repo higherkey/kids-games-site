@@ -107,20 +107,19 @@ export class ShadowProjection extends BaseBusyBoardModule {
     ctx.fill();
     ctx.restore();
 
-    // Active Light Ripple Arcs
-    if (this.isDragging) {
-      ctx.save();
-      for (let i = 0; i < 3; i++) {
-        const offset = ((this.animPhase + i * 0.8) % 2.5) * 12;
-        const alpha = Math.max(0, 1 - offset / 30);
-        ctx.strokeStyle = theme === 'paper' ? `rgba(230, 126, 34, ${alpha * 0.6})` : `rgba(0, 255, 204, ${alpha * 0.7})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(this.puckX, this.puckY, 20 + offset, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
+    // Tailored Always-on Directional Light Cone from light source toward block
+    ctx.save();
+    const coneGrad = ctx.createRadialGradient(lightX, lightY, 5, lightX, lightY, distance + 50);
+    const lightColor = theme === 'paper' ? 'rgba(230, 126, 34, ' : 'rgba(0, 255, 204, ';
+    coneGrad.addColorStop(0, lightColor + '0.35)');
+    coneGrad.addColorStop(1, lightColor + '0.0)');
+    ctx.fillStyle = coneGrad;
+    ctx.beginPath();
+    ctx.moveTo(lightX, lightY);
+    ctx.arc(lightX, lightY, distance + 50, angle - 0.22, angle + 0.22);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
 
     // Draw the draggable puck
     ctx.save();

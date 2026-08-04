@@ -46,18 +46,19 @@ export class RotaryDimmer extends BaseBusyBoardModule {
     const centerX = mx + mw / 2;
     const dialRadius = Math.min(mw, mh) * 0.22;
 
-    // Radiating acoustic pulse rings when active
+    // Tailored rotary arc gauge glow while turning (dragging)
     if (this.isDragging) {
       ctx.save();
-      for (let i = 0; i < 3; i++) {
-        const offset = ((this.animPhase + i * 0.8) % 2.5) * 10;
-        const alpha = Math.max(0, 1 - offset / 25);
-        ctx.strokeStyle = theme === 'paper' ? `rgba(217, 119, 6, ${alpha * 0.5})` : `rgba(0, 255, 204, ${alpha * 0.6})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, dialRadius + offset, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+      const startAngle = -Math.PI * 0.75;
+      const currentAngle = startAngle + this.dimmerValue * (Math.PI * 1.5);
+      
+      ctx.shadowColor = theme === 'paper' ? '#D97706' : '#00FFCC';
+      ctx.shadowBlur = 12;
+      ctx.strokeStyle = theme === 'paper' ? 'rgba(217, 119, 6, 0.75)' : 'rgba(0, 255, 204, 0.85)';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, dialRadius + 8, startAngle, currentAngle);
+      ctx.stroke();
       ctx.restore();
     }
 
