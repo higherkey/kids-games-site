@@ -1,5 +1,29 @@
 import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 import type { LuminaryBoardGame } from '../LuminaryBoardGame';
+import { ToneAudioController } from '../../../core/ToneAudioController';
+
+function hslToRgb(h: number, s: number, l: number) {
+  h /= 360;
+  let r: number, g: number, b: number;
+  if (s === 0) {
+    r = g = b = l;
+  } else {
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    const hue2rgb = (t: number) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    };
+    r = hue2rgb(h + 1 / 3);
+    g = hue2rgb(h);
+    b = hue2rgb(h - 1 / 3);
+  }
+  return { red: Math.round(r * 255), green: Math.round(g * 255), blue: Math.round(b * 255) };
+}
 
 export class RainbowCrossfader extends BaseBusyBoardModule {
   private readonly game: LuminaryBoardGame;
@@ -200,6 +224,10 @@ export class RainbowCrossfader extends BaseBusyBoardModule {
       alpha: 1.0
     });
 
+    // Modulate Light Board Tone dynamically based on current HSL -> RGB
+    const rgb = hslToRgb(this.value * 360, 1.0, 0.5);
+    ToneAudioController.getInstance().updateLightBoardTone(rgb);
+
     // Play chord sweeps using synth:pluck
     if (Math.abs(this.value - this.lastTickValue) >= 0.05) {
       const pitch = 250 + this.value * 450;
@@ -212,6 +240,7 @@ export class RainbowCrossfader extends BaseBusyBoardModule {
   public handlePointerUp(): void {
     if (this.isDragging) {
       this.isDragging = false;
+      ToneAudioController.getInstance().stopLightBoardTone();
       this.audio.play('synth:click', 350);
     }
   }
@@ -219,11 +248,9 @@ export class RainbowCrossfader extends BaseBusyBoardModule {
 
 
   private updateTrail() {
-    // Fade out and remove old trail points
+    // Fade out and remove old trail points (no random drift — keeps animation smooth)
     this.trailPoints.forEach(pt => {
       pt.alpha -= 0.05;
-      // Add a slight jitter/drift for visual flare
-      pt.y += (Math.random() - 0.5) * 1.5;
     });
     this.trailPoints = this.trailPoints.filter(pt => pt.alpha > 0);
   }

@@ -5,6 +5,8 @@ export class RGBLightModule extends BaseBusyBoardModule {
   protected readonly game: any;
   private activeSlider: 'r' | 'g' | 'b' | null = null;
   private lastTickValue = { r: 0, g: 0, b: 0 };
+  // Bulb tap feedback: phase 0 = idle, > 0 = expanding flash ring
+  private bulbFlashPhase = 0;
 
   constructor(id: string, x: number, y: number, w: number, h: number, game: any) {
     super(id, x, y, w, h);
@@ -130,22 +132,39 @@ export class RGBLightModule extends BaseBusyBoardModule {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Electrical sparkles if brightness is very high
+    // Electrical sparkles if brightness is very high (deterministic, driven by animPhase)
     if (brightness > 0.85) {
-      ctx.strokeStyle = '#FFFFFF';
+      ctx.strokeStyle = theme === 'paper' ? 'rgba(255, 200, 80, 0.9)' : 'rgba(0, 255, 204, 0.9)';
       ctx.lineWidth = 1.5;
       for (let i = 0; i < 3; i++) {
-        const angle = Math.random() * Math.PI * 2;
+        // Use animPhase instead of Math.random() to avoid per-frame jitter
+        const angle = (this.animPhase * 0.7 + i * (Math.PI * 2 / 3)) % (Math.PI * 2);
         const startDist = bulbRadius + 3;
-        const endDist = startDist + Math.random() * 10;
+        const endDist = startDist + 5 + Math.sin(this.animPhase + i) * 5;
         ctx.beginPath();
         ctx.moveTo(centerX + Math.cos(angle) * startDist, bulbCenterY - 8 + Math.sin(angle) * startDist);
-        const midX = centerX + Math.cos(angle) * (startDist + endDist) / 2 + (Math.random() - 0.5) * 5;
-        const midY = bulbCenterY - 8 + Math.sin(angle) * (startDist + endDist) / 2 + (Math.random() - 0.5) * 5;
-        ctx.lineTo(midX, midY);
+        const midAngle = angle + 0.2 * Math.sin(this.animPhase * 2 + i);
+        const midDist = (startDist + endDist) / 2;
+        ctx.lineTo(centerX + Math.cos(midAngle) * midDist, bulbCenterY - 8 + Math.sin(midAngle) * midDist);
         ctx.lineTo(centerX + Math.cos(angle) * endDist, bulbCenterY - 8 + Math.sin(angle) * endDist);
         ctx.stroke();
       }
+    }
+
+    // Bulb tap flash ring (visual confirmation)
+    if (this.bulbFlashPhase > 0) {
+      this.bulbFlashPhase += 0.08;
+      const flashRadius = bulbRadius + this.bulbFlashPhase * 20;
+      const flashAlpha = Math.max(0, 1 - this.bulbFlashPhase / 1.5);
+      ctx.save();
+      ctx.globalAlpha = flashAlpha;
+      ctx.strokeStyle = theme === 'paper' ? 'rgba(217, 119, 6, 0.8)' : 'rgba(0, 255, 204, 0.8)';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(centerX, bulbCenterY - 8, flashRadius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+      if (this.bulbFlashPhase >= 1.5) this.bulbFlashPhase = 0;
     }
     ctx.restore();
 
@@ -259,6 +278,7 @@ export class RGBLightModule extends BaseBusyBoardModule {
       const brightness = (rgb.r + rgb.g + rgb.b) / 3 / 255;
       this.audio.play('synth:bell', 300 + brightness * 600);
       this.haptics.lightTap();
+      this.bulbFlashPhase = 0.01; // Trigger expanding flash ring
       return true;
     }
 

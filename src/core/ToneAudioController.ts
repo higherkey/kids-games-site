@@ -2,6 +2,13 @@ import * as Tone from 'tone';
 import type { IAudioEngine } from './IAudioEngine';
 import { AudioController } from './AudioController';
 
+export interface LightBoardAudioParams {
+  red: number;   // 0 - 255
+  green: number; // 0 - 255
+  blue: number;  // 0 - 255
+  brightness?: number; // 0.0 - 1.0
+}
+
 export class ToneAudioController implements IAudioEngine {
   private static instance: ToneAudioController;
   private isInitialized = false;
@@ -28,75 +35,161 @@ export class ToneAudioController implements IAudioEngine {
     return ToneAudioController.instance;
   }
 
+  public async init(): Promise<void> {
+    await this.ensureInit();
+  }
+
   private async ensureInit() {
     if (this.isInitialized) return;
     try {
       await Tone.start();
       
-      // Warm master low-pass filter (1600Hz cutoff removes harsh high-frequency screeching)
-      this.masterFilter = new Tone.Filter({
-        frequency: 1600,
-        type: 'lowpass',
-        rolloff: -12
-      }).toDestination();
+      try {
+        // Warm master low-pass filter (1600Hz cutoff removes harsh high-frequency screeching)
+        this.masterFilter = new Tone.Filter({
+          frequency: 1600,
+          type: 'lowpass',
+          rolloff: -12
+        }).toDestination();
+      } catch {
+        this.masterFilter = null;
+      }
+
+      const dest = this.masterFilter || Tone.getDestination();
 
       // Soft Warm FM Synth (Gentle glass & bell tones for RGB light sliders & chimes)
-      this.fmSynth = new Tone.FMSynth({
-        harmonicity: 1.0,
-        modulationIndex: 1.5, // Low modulation index prevents harsh metallic distortion
-        oscillator: { type: 'sine' },
-        envelope: { attack: 0.03, decay: 0.25, sustain: 0.2, release: 0.3 },
-        modulation: { type: 'sine' },
-        modulationEnvelope: { attack: 0.03, decay: 0.2, sustain: 0.1, release: 0.2 }
-      }).connect(this.masterFilter);
-      this.fmSynth.volume.value = -12;
+      try {
+        this.fmSynth = new Tone.FMSynth({
+          harmonicity: 1.0,
+          modulationIndex: 1.5, // Low modulation index prevents harsh metallic distortion
+          oscillator: { type: 'sine' },
+          envelope: { attack: 0.03, decay: 0.25, sustain: 0.2, release: 0.5 },
+          modulation: { type: 'sine' },
+          modulationEnvelope: { attack: 0.03, decay: 0.2, sustain: 0.1, release: 0.2 }
+        }).connect(dest);
+        this.fmSynth.volume.value = -12;
+      } catch {
+        this.fmSynth = null;
+      }
 
       // Soft Warm AM Synth (Analog hum for Rotary Dimmer)
-      this.amSynth = new Tone.AMSynth({
-        harmonicity: 1.2,
-        oscillator: { type: 'triangle' }, // Smooth triangle wave instead of harsh sawtooth
-        envelope: { attack: 0.04, decay: 0.3, sustain: 0.4, release: 0.4 },
-        modulation: { type: 'sine' }
-      }).connect(this.masterFilter);
-      this.amSynth.volume.value = -14;
+      try {
+        this.amSynth = new Tone.AMSynth({
+          harmonicity: 1.2,
+          oscillator: { type: 'triangle' }, // Smooth triangle wave instead of harsh sawtooth
+          envelope: { attack: 0.04, decay: 0.3, sustain: 0.4, release: 0.4 },
+          modulation: { type: 'sine' }
+        }).connect(dest);
+        this.amSynth.volume.value = -14;
+      } catch {
+        this.amSynth = null;
+      }
 
       // Gentle Duo Synth (Rainbow Crossfader glides)
-      this.duoSynth = new Tone.DuoSynth({
-        vibratoAmount: 0.15,
-        vibratoRate: 4,
-        harmonicity: 1.0,
-        voice0: { oscillator: { type: 'sine' } },
-        voice1: { oscillator: { type: 'sine' } }
-      }).connect(this.masterFilter);
-      this.duoSynth.volume.value = -14;
+      try {
+        this.duoSynth = new Tone.DuoSynth({
+          vibratoAmount: 0.15,
+          vibratoRate: 4,
+          harmonicity: 1.0,
+          voice0: { oscillator: { type: 'sine' } },
+          voice1: { oscillator: { type: 'sine' } }
+        }).connect(dest);
+        this.duoSynth.volume.value = -14;
+      } catch {
+        this.duoSynth = null;
+      }
 
       // Warm Brown Noise Synth (Soft tactile rumbles)
-      this.noiseSynth = new Tone.NoiseSynth({
-        noise: { type: 'brown' },
-        envelope: { attack: 0.01, decay: 0.08, sustain: 0 }
-      }).connect(this.masterFilter);
-      this.noiseSynth.volume.value = -16;
+      try {
+        this.noiseSynth = new Tone.NoiseSynth({
+          noise: { type: 'pink' },
+          envelope: { attack: 0.005, decay: 0.05, sustain: 0, release: 0.05 }
+        }).connect(dest);
+        this.noiseSynth.volume.value = -16;
+      } catch {
+        this.noiseSynth = null;
+      }
 
       // Tactile Wood/Felt Membrane Synth (Satisfying warm click & thud like Contrast Inverter)
-      this.membraneSynth = new Tone.MembraneSynth({
-        pitchDecay: 0.03,
-        octaves: 2.5,
-        oscillator: { type: 'sine' },
-        envelope: { attack: 0.002, decay: 0.12, sustain: 0.01, release: 0.08 }
-      }).connect(this.masterFilter);
-      this.membraneSynth.volume.value = -8;
+      try {
+        this.membraneSynth = new Tone.MembraneSynth({
+          pitchDecay: 0.03,
+          octaves: 2.5,
+          oscillator: { type: 'sine' },
+          envelope: { attack: 0.002, decay: 0.12, sustain: 0.01, release: 0.08 }
+        }).connect(dest);
+        this.membraneSynth.volume.value = -8;
+      } catch {
+        this.membraneSynth = null;
+      }
 
       // Gentle Pluck Synth (Soft string plucks)
-      this.pluckSynth = new Tone.PluckSynth({
-        attackNoise: 0.4,
-        dampening: 2000,
-        resonance: 0.7
-      }).connect(this.masterFilter);
-      this.pluckSynth.volume.value = -10;
+      try {
+        this.pluckSynth = new Tone.PluckSynth({
+          attackNoise: 0.4,
+          dampening: 2000,
+          resonance: 0.7
+        }).connect(dest);
+        this.pluckSynth.volume.value = -10;
+      } catch {
+        this.pluckSynth = null;
+      }
 
       this.isInitialized = true;
     } catch (err) {
       console.warn('ToneAudioController initialization failed', err);
+    }
+  }
+
+  /**
+   * Sound Board: Plays harmonic pentatonic scale notes (Octave 5 glockenspiel-like).
+   */
+  public async playSoundBoardNote(noteIndex: number, octave: number = 5): Promise<void> {
+    await this.ensureInit();
+    const pentatonicScale = ['C', 'D', 'E', 'G', 'A'];
+    const note = pentatonicScale[Math.abs(noteIndex) % pentatonicScale.length];
+    const pitch = `${note}${octave}`;
+
+    if (this.fmSynth) {
+      this.fmSynth.triggerAttackRelease(pitch, '8n');
+    }
+  }
+
+  /**
+   * Light Board: Modulates frequency (150Hz-850Hz) dynamically based on active RGB values.
+   */
+  public async updateLightBoardTone(params: LightBoardAudioParams): Promise<void> {
+    await this.ensureInit();
+    const baseFreq = 150 + ((params.red * 2 + params.green * 1.5 + params.blue) / (255 * 4.5)) * 700;
+    const brightness = params.brightness ?? 1.0;
+    
+    // Scale volume with brightness if provided
+    if (this.fmSynth && typeof params.brightness === 'number') {
+      const vol = -24 + brightness * 12; // -24dB to -12dB range
+      this.fmSynth.volume.rampTo(vol, 0.05);
+    }
+
+    if (!this.activeGlides.has('lightboard')) {
+      this.startGlide('lightboard', 'fm', baseFreq, brightness);
+    } else {
+      this.updateGlide('lightboard', baseFreq);
+    }
+  }
+
+  /**
+   * Stop continuous light board tone glissando on pointer release.
+   */
+  public stopLightBoardTone(): void {
+    this.stopGlide('lightboard');
+  }
+
+  /**
+   * Mechanical Click: Zero-latency pink noise impulse for switch flips and peg drops.
+   */
+  public async playTactileClick(): Promise<void> {
+    await this.ensureInit();
+    if (this.noiseSynth) {
+      this.noiseSynth.triggerAttackRelease('16n');
     }
   }
 
@@ -192,7 +285,8 @@ export class ToneAudioController implements IAudioEngine {
 
       if (synthInstance) {
         const targetPitch = instrument === 'windchime' ? 329.63 : pleasantFreq;
-        const panner = new Tone.Panner(Math.max(-1, Math.min(1, pan))).connect(this.masterFilter!);
+        const dest = this.masterFilter || Tone.getDestination();
+        const panner = new Tone.Panner(Math.max(-1, Math.min(1, pan))).connect(dest);
         synthInstance.connect(panner);
         synthInstance.triggerAttack(targetPitch);
         this.activeGlides.set(id, { synth: synthInstance, panner, note: targetPitch });
@@ -205,11 +299,15 @@ export class ToneAudioController implements IAudioEngine {
   /**
    * Smoothly ramp frequency (pitch-glissando) during drag movement
    */
-  public updateGlide(id: string, _targetFreq: number, _volume?: number, pan?: number) {
+  public updateGlide(id: string, targetFreq: number, _volume?: number, pan?: number) {
     const active = this.activeGlides.get(id);
     if (!active) return;
 
     try {
+      if (typeof targetFreq === 'number') {
+        const pleasantFreq = Math.min(650, Math.max(120, targetFreq));
+        active.synth.setNote(pleasantFreq);
+      }
       if (typeof pan === 'number' && active.panner) {
         active.panner.pan.rampTo(Math.max(-1, Math.min(1, pan)), 0.06);
       }
@@ -234,3 +332,4 @@ export class ToneAudioController implements IAudioEngine {
     }
   }
 }
+

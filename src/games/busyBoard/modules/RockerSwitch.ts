@@ -4,10 +4,12 @@ export class RockerSwitch extends BaseBusyBoardModule {
   private isOn = false;
   private hasPower = true;
   private readonly onToggleCallback?: (state: boolean) => void;
+  protected readonly game: any;
 
-  constructor(id: string, x: number, y: number, w: number, h: number, onToggle?: (state: boolean) => void) {
+  constructor(id: string, x: number, y: number, w: number, h: number, onToggle?: (state: boolean) => void, game?: any) {
     super(id, x, y, w, h);
     this.onToggleCallback = onToggle;
+    this.game = game;
   }
 
   public setPowerState(hasPower: boolean): void {
@@ -15,6 +17,8 @@ export class RockerSwitch extends BaseBusyBoardModule {
   }
 
   public render(ctx: CanvasRenderingContext2D, px: number, py: number, pw: number, ph: number): void {
+    const theme = this.game?.getTheme?.() ?? 'paper';
+    const isPaper = theme === 'paper';
     // Margin for spacing
     const margin = 10;
     const mx = px + margin;
@@ -22,24 +26,24 @@ export class RockerSwitch extends BaseBusyBoardModule {
     const mw = pw - margin * 2;
     const mh = ph - margin * 2;
 
-    // Draw module background / faceplate (parchment/light grey with subtle shadow)
+    // Draw module background / faceplate
     ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+    ctx.shadowColor = isPaper ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 255, 204, 0.15)';
     ctx.shadowBlur = 10;
     ctx.shadowOffsetX = 2;
     ctx.shadowOffsetY = 4;
     
-    ctx.fillStyle = '#F4F1EA'; // Parchment
-    ctx.strokeStyle = '#D5C3A6'; // Indigo border / dark sand
+    ctx.fillStyle = isPaper ? '#F4F1EA' : '#141824'; // Parchment / Neon dark
+    ctx.strokeStyle = isPaper ? '#D5C3A6' : '#2A364F'; // Sand / Neon border
     ctx.lineWidth = 3;
     this.roundRect(ctx, mx, my, mw, mh, 16);
     ctx.fill();
-    ctx.shadowColor = 'transparent'; // Reset shadow for stroke
+    ctx.shadowColor = 'transparent';
     ctx.stroke();
     ctx.restore();
 
     // Draw Label/Title
-    ctx.fillStyle = '#2F3061'; // Indigo
+    ctx.fillStyle = isPaper ? '#2F3061' : '#66FCF1'; // Indigo / Neon Cyan
     ctx.font = 'bold 14px Fredoka, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';

@@ -1,5 +1,6 @@
 import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 import type { LuminaryBoardGame } from '../LuminaryBoardGame';
+import { ToneAudioController } from '../../../core/ToneAudioController';
 
 export class RotaryDimmer extends BaseBusyBoardModule {
   private readonly game: LuminaryBoardGame;
@@ -103,11 +104,20 @@ export class RotaryDimmer extends BaseBusyBoardModule {
     const centerX = mx + mw / 2;
 
     this.updateValueFromPointer(x, y, centerX, centerY);
+
+    const v = Math.round(this.dimmerValue * 255);
+    ToneAudioController.getInstance().updateLightBoardTone({
+      red: v,
+      green: v,
+      blue: v,
+      brightness: this.dimmerValue
+    });
   }
 
   public handlePointerUp(): void {
     if (this.isDragging) {
       this.isDragging = false;
+      ToneAudioController.getInstance().stopLightBoardTone();
       this.audio.play('synth:click', 300);
     }
   }

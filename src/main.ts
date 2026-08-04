@@ -9,7 +9,17 @@ import { GameLoop } from './core/GameLoop';
 import { Router } from './core/Router';
 import { LoadingOverlay } from './ui/LoadingOverlay';
 import { AudioController } from './core/AudioController';
+import { ToneAudioController } from './core/ToneAudioController';
 import { GameRegistry } from './core/GameRegistry';
+
+// Global audio initialization on first user interaction
+const initAudioOnInteraction = () => {
+  ToneAudioController.getInstance().init();
+  window.removeEventListener('pointerdown', initAudioOnInteraction);
+  window.removeEventListener('touchstart', initAudioOnInteraction);
+};
+window.addEventListener('pointerdown', initAudioOnInteraction, { once: true });
+window.addEventListener('touchstart', initAudioOnInteraction, { once: true });
 
 // PWA Support
 registerSW({

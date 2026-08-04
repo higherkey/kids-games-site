@@ -1,4 +1,5 @@
 import { BaseGame } from '../../core/BaseGame';
+import { ToneAudioController } from '../../core/ToneAudioController';
 
 interface SoundPad {
   x: number;
@@ -107,7 +108,8 @@ export class SoundBoardGame extends BaseGame {
   private triggerPad(pad: SoundPad) {
     pad.active = 1.0;
     this.haptics.lightTap();
-    this.audio.play(`synth:${pad.instrument}`, pad.note);
+    const padIndex = this.pads.indexOf(pad);
+    ToneAudioController.getInstance().playSoundBoardNote(padIndex >= 0 ? padIndex : 0, 5);
   }
 
   update(dt: number): void {

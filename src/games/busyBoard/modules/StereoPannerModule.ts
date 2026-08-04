@@ -29,7 +29,7 @@ export class StereoPannerModule extends BaseBusyBoardModule {
 
     // Header Title
     ctx.fillStyle = isPaper ? '#6E6659' : '#8A99B5';
-    ctx.font = 'bold 11px sans-serif';
+    ctx.font = 'bold 11px Fredoka, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('STEREO PAN FADER', px + pw / 2, py + 24);
 
@@ -61,7 +61,7 @@ export class StereoPannerModule extends BaseBusyBoardModule {
     ctx.restore();
 
     // Left and Right Channel Labels / Icons
-    ctx.font = 'bold 12px sans-serif';
+    ctx.font = 'bold 12px Fredoka, sans-serif';
     ctx.fillStyle = isPaper ? (audioPan < -0.1 ? '#D97706' : '#9E9484') : (audioPan < -0.1 ? '#00E6CC' : '#4E5D78');
     ctx.textAlign = 'center';
     ctx.fillText('L', trackStartX - 20, trackY + 4);
@@ -115,7 +115,7 @@ export class StereoPannerModule extends BaseBusyBoardModule {
     ctx.fill();
 
     // Subtitle Pan Reading
-    ctx.font = '10px sans-serif';
+    ctx.font = '10px Fredoka, sans-serif';
     ctx.fillStyle = isPaper ? '#8C8273' : '#6C7D9C';
     ctx.textAlign = 'center';
 
