@@ -42,7 +42,9 @@
 
 ## 4. Issues and Out of Scope
 - **4a) Potential Blockers**: None.
-- **4b) Opportunities**:
-  - Expanded unit test coverage from 21 test files to 32 test files.
-  - Implemented client-side Web Audio WAV exporting in `KhipuSynth`.
-  - Added W3C OKLCH color tokens and APCA-guided contrast parameters.
+- **4b) Opportunities (Tracked GitHub Issues)**:
+  - **Issue #28**: [feat: implement Phase 4 Parental Gate for settings and exit navigation](https://github.com/higherkey/kipu/issues/28)
+  - **Issue #29**: [feat: support multi-touch multi-finger cooperative play on touchscreen devices](https://github.com/higherkey/kipu/issues/29)
+  - **Issue #30**: [feat: enable KhipuSynth loop pattern JSON serialization and URL sharing](https://github.com/higherkey/kipu/issues/30)
+  - **Issue #31**: [chore: configure PWA Workbox runtime caching for offline audio sound fonts](https://github.com/higherkey/kipu/issues/31)
+  - **Issue #32**: [feat: implement global visual micro-reward particle overlays for goal completions](https://github.com/higherkey/kipu/issues/32)
