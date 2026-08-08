@@ -11,6 +11,7 @@ import { SoundBoardGame } from '../games/soundBoard/SoundBoardGame';
 import { ParticlePhysicsGame } from '../games/particlePhysics/ParticlePhysicsGame';
 import { SwitchboardGame } from '../games/busyBoard/SwitchboardGame';
 import { LuminaryBoardGame } from '../games/busyBoard/LuminaryBoardGame';
+import { ToneLuminaryBoardGame } from '../games/busyBoard/ToneLuminaryBoardGame';
 import { MechanicalWorkshopGame } from '../games/busyBoard/MechanicalWorkshopGame';
 
 export interface GameRegistration {
@@ -26,7 +27,7 @@ export interface GameRegistration {
 
 export class GameRegistry {
   private static instance: GameRegistry;
-  private registry: Map<string, GameRegistration> = new Map();
+  private readonly registry: Map<string, GameRegistration> = new Map();
 
   private constructor() {
     this.registerAll();
@@ -154,12 +155,22 @@ export class GameRegistry {
       {
         id: 'luminaryBoard',
         name: 'The Luminary Board',
-        subtitle: 'Dimmers & Color Matrices',
+        subtitle: 'Dimmers & Color Matrices (Web Audio)',
         portal: 'busyBoard',
         icon: 'bulb',
         category: 'sensory',
-        desc: 'Interact with dimmers, strobe patterns, halos, and multi-finger color gradients!',
+        desc: 'Interact with dimmers, strobe patterns, halos, and multi-finger color gradients with Web Audio glissando!',
         constructorRef: LuminaryBoardGame
+      },
+      {
+        id: 'luminaryBoardTone',
+        name: 'The Luminary Board (Tone.js)',
+        subtitle: 'Tone.js Synthesizer Studio',
+        portal: 'busyBoard',
+        icon: 'bulb',
+        category: 'sensory',
+        desc: 'Compare Tone.js FM synthesis, AM modulation, and continuous pitch-glide voice engine side-by-side!',
+        constructorRef: ToneLuminaryBoardGame
       },
       {
         id: 'mechanicalWorkshop',

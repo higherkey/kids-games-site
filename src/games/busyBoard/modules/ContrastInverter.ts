@@ -1,29 +1,15 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 import type { LuminaryBoardGame } from '../LuminaryBoardGame';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
 
-export class ContrastInverter implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-  private game: LuminaryBoardGame;
+export class ContrastInverter extends BaseBusyBoardModule {
+  private readonly game: LuminaryBoardGame;
 
   private state = false; // false = paper theme, true = neon theme
-  private audio: AudioController;
-  private haptics: HapticController;
+  private flipAnimTimer = 0;
 
   constructor(id: string, x: number, y: number, w: number, h: number, game: LuminaryBoardGame) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
+    super(id, x, y, w, h);
     this.game = game;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
   }
 
   public init(): void {
@@ -41,6 +27,19 @@ export class ContrastInverter implements BusyBoardModule {
 
     const centerX = mx + mw / 2;
     const centerY = my + mh / 2 + 10;
+
+    if (this.flipAnimTimer > 0) {
+      this.flipAnimTimer -= 0.05;
+      const radius = (1 - this.flipAnimTimer) * 40;
+      const alpha = this.flipAnimTimer;
+      ctx.save();
+      ctx.strokeStyle = theme === 'paper' ? `rgba(230, 126, 34, ${alpha * 0.7})` : `rgba(0, 255, 204, ${alpha * 0.8})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 15 + radius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
 
     // Faceplate
     ctx.save();
@@ -151,13 +150,11 @@ export class ContrastInverter implements BusyBoardModule {
     return false;
   }
 
-  public handlePointerMove(): void {}
-  public handlePointerUp(): void {}
 
-  public destroy(): void {}
 
   private toggle() {
     this.state = !this.state;
+    this.flipAnimTimer = 1.0;
     const nextTheme = this.state ? 'neon' : 'paper';
     this.game.setTheme(nextTheme);
 

@@ -1,7 +1,7 @@
-import type { Game } from '../../core/Game';
-import { AudioController } from '../../core/AudioController';
-import { HapticController } from '../../core/HapticController';
+import { BaseGame } from '../../core/BaseGame';
 import { TranslationManager } from '../../core/TranslationManager';
+
+type ColorChannel = 'red' | 'yellow' | 'blue';
 
 interface ColorBlob {
   id: number;
@@ -62,13 +62,9 @@ const COLOR_REFS: Array<{ name: string; r: number; g: number; b: number }> = [
   { name: 'brown',  r: 196, g: 176, b: 133 },
 ];
 
-export class ColorDropperGame implements Game {
-  private canvas: HTMLCanvasElement | null = null;
-  private ctx: CanvasRenderingContext2D | null = null;
+export class ColorDropperGame extends BaseGame {
   private blobs: ColorBlob[] = [];
   private particles: Particle[] = [];
-  private audio: AudioController;
-  private haptics: HapticController;
   
   private draggingBlob: ColorBlob | null = null;
   private dragOffset = { x: 0, y: 0 };
@@ -76,33 +72,30 @@ export class ColorDropperGame implements Game {
   private clickStartPos = { x: 0, y: 0 };
   
   private nextBlobId = 1;
-  private potsY = 70;
-  private potsHeight = 80;
-  private pots: Array<{ color: string; labelKey: 'red' | 'yellow' | 'blue'; x: number; width: number }> = [];
-  private ENTITY_LIMIT = 150;
+  private readonly potsY = 70;
+  private readonly potsHeight = 80;
+  private pots: Array<{ color: string; labelKey: ColorChannel; x: number; width: number }> = [];
+  private readonly ENTITY_LIMIT = 150;
 
   constructor() {
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super();
     this.audio.registerSound('bloop', '/sounds/pop.ogg');
     this.audio.registerSound('pop', '/sounds/pop.ogg');
   }
 
-  init(canvas: HTMLCanvasElement): void {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
+  protected onInit(): void {
     this.blobs = [];
     this.particles = [];
     this.draggingBlob = null;
 
     this.setupPots();
 
-    canvas.addEventListener('touchstart', this.handleTouchStart, { passive: false });
-    canvas.addEventListener('touchmove', this.handleTouchMove, { passive: false });
-    canvas.addEventListener('touchend', this.handleTouchEnd, { passive: false });
-    canvas.addEventListener('mousedown', this.handleMouseDown);
-    canvas.addEventListener('mousemove', this.handleMouseMove);
-    canvas.addEventListener('mouseup', this.handleMouseUp);
+    this.canvas?.addEventListener('touchstart', this.handleTouchStart, { passive: false });
+    this.canvas?.addEventListener('touchmove', this.handleTouchMove, { passive: false });
+    this.canvas?.addEventListener('touchend', this.handleTouchEnd, { passive: false });
+    this.canvas?.addEventListener('mousedown', this.handleMouseDown);
+    this.canvas?.addEventListener('mousemove', this.handleMouseMove);
+    this.canvas?.addEventListener('mouseup', this.handleMouseUp);
   }
 
   private setupPots() {
@@ -155,7 +148,7 @@ export class ColorDropperGame implements Game {
     return { colorHex, colorName: closestName };
   }
 
-  private spawnBlob(type: 'red' | 'yellow' | 'blue', x: number, y: number) {
+  private spawnBlob(type: ColorChannel, x: number, y: number) {
     // Entity Limit check: remove oldest non-dragging drop if at limit
     if (this.blobs.length >= this.ENTITY_LIMIT) {
       const indexToRemove = this.blobs.findIndex(b => !b.isDragging);
@@ -192,35 +185,35 @@ export class ColorDropperGame implements Game {
     this.createSplashParticles(x, y, COLOR_MAP[type], 8); // Reduced count for performance
   }
 
-  private handleMouseDown = (e: MouseEvent) => {
+  private readonly handleMouseDown = (e: MouseEvent) => {
     const pos = this.getCanvasPos(e.clientX, e.clientY);
     this.startPress(pos.x, pos.y);
   };
 
-  private handleMouseMove = (e: MouseEvent) => {
+  private readonly handleMouseMove = (e: MouseEvent) => {
     const pos = this.getCanvasPos(e.clientX, e.clientY);
     this.movePress(pos.x, pos.y);
   };
 
-  private handleMouseUp = () => {
+  private readonly handleMouseUp = () => {
     this.endPress();
   };
 
-  private handleTouchStart = (e: TouchEvent) => {
+  private readonly handleTouchStart = (e: TouchEvent) => {
     e.preventDefault();
     const touch = e.changedTouches[0];
     const pos = this.getCanvasPos(touch.clientX, touch.clientY);
     this.startPress(pos.x, pos.y);
   };
 
-  private handleTouchMove = (e: TouchEvent) => {
+  private readonly handleTouchMove = (e: TouchEvent) => {
     e.preventDefault();
     const touch = e.changedTouches[0];
     const pos = this.getCanvasPos(touch.clientX, touch.clientY);
     this.movePress(pos.x, pos.y);
   };
 
-  private handleTouchEnd = (e: TouchEvent) => {
+  private readonly handleTouchEnd = (e: TouchEvent) => {
     e.preventDefault();
     this.endPress();
   };
@@ -274,7 +267,10 @@ export class ColorDropperGame implements Game {
   private endPress() {
     if (this.draggingBlob) {
       const clickDuration = Date.now() - this.clickStartTime;
-      const distMoved = Math.sqrt((this.draggingBlob.x + this.dragOffset.x - this.clickStartPos.x) ** 2 + (this.draggingBlob.y + this.dragOffset.y - this.clickStartPos.y) ** 2);
+      const distMoved = Math.hypot(
+        this.draggingBlob.x + this.dragOffset.x - this.clickStartPos.x,
+        this.draggingBlob.y + this.dragOffset.y - this.clickStartPos.y
+      );
 
       if (clickDuration < 250 && distMoved < 15) {
         this.trySplitBlob(this.draggingBlob);
@@ -345,63 +341,69 @@ export class ColorDropperGame implements Game {
   private checkBlobMerges() {
     for (let i = 0; i < this.blobs.length; i++) {
       for (let j = i + 1; j < this.blobs.length; j++) {
-        const b1 = this.blobs[i];
-        const b2 = this.blobs[j];
-
-        // Skip merge if either blob is on cooldown
-        if (b1.mergeCooldown > 0 || b2.mergeCooldown > 0) continue;
-
-        const dx = b2.x - b1.x;
-        const dy = b2.y - b1.y;
-        
-        // Performance: Use squared distance to avoid Math.sqrt in check
-        const distSq = dx * dx + dy * dy;
-        const mergeThreshold = (b1.radius + b2.radius) * 0.85;
-
-        if (distSq < mergeThreshold * mergeThreshold) {
-          const totalMass = b1.radius * b1.radius + b2.radius * b2.radius;
-          const newRadius = Math.min(100, Math.sqrt(totalMass));
-
-          const newX = (b1.x * (b1.radius * b1.radius) + b2.x * (b2.radius * b2.radius)) / totalMass;
-          const newY = (b1.y * (b1.radius * b1.radius) + b2.y * (b2.radius * b2.radius)) / totalMass;
-
-          const newComponents = {
-            red: b1.components.red + b2.components.red,
-            yellow: b1.components.yellow + b2.components.yellow,
-            blue: b1.components.blue + b2.components.blue,
-          };
-
-          const { colorHex: newHex, colorName: newName } = this.computeProgrammaticColor(newComponents);
-          const oldColorName1 = b1.colorName;
-
-          b1.x = newX;
-          b1.y = newY;
-          b1.radius = newRadius;
-          b1.components = newComponents;
-          b1.colorHex = newHex;
-          b1.colorName = newName;
-
-          if (!b1.isDragging && b2.isDragging) {
-            b1.isDragging = true;
-            this.draggingBlob = b1;
-          }
-
-          this.blobs.splice(j, 1);
-
-          this.audio.play('bloop');
-          this.haptics.lightTap();
-          this.createSplashParticles(newX, newY, newHex, 8);
-
-          if (newName !== oldColorName1) {
-            const langCode = TranslationManager.getCurrent().code;
-            const spokenText = this.getColorName(newName);
-            this.audio.speak(spokenText, langCode);
-          }
-
+        if (this.tryMergeBlobs(i, j)) {
           return;
         }
       }
     }
+  }
+
+  private tryMergeBlobs(i: number, j: number): boolean {
+    const b1 = this.blobs[i];
+    const b2 = this.blobs[j];
+
+    // Skip merge if either blob is on cooldown
+    if (b1.mergeCooldown > 0 || b2.mergeCooldown > 0) return false;
+
+    const dx = b2.x - b1.x;
+    const dy = b2.y - b1.y;
+    
+    // Performance: Use squared distance to avoid Math.sqrt in check
+    const distSq = dx * dx + dy * dy;
+    const mergeThreshold = (b1.radius + b2.radius) * 0.85;
+
+    if (distSq >= mergeThreshold * mergeThreshold) return false;
+
+    const totalMass = b1.radius * b1.radius + b2.radius * b2.radius;
+    const newRadius = Math.min(100, Math.sqrt(totalMass));
+
+    const newX = (b1.x * (b1.radius * b1.radius) + b2.x * (b2.radius * b2.radius)) / totalMass;
+    const newY = (b1.y * (b1.radius * b1.radius) + b2.y * (b2.radius * b2.radius)) / totalMass;
+
+    const newComponents = {
+      red: b1.components.red + b2.components.red,
+      yellow: b1.components.yellow + b2.components.yellow,
+      blue: b1.components.blue + b2.components.blue,
+    };
+
+    const { colorHex: newHex, colorName: newName } = this.computeProgrammaticColor(newComponents);
+    const oldColorName1 = b1.colorName;
+
+    b1.x = newX;
+    b1.y = newY;
+    b1.radius = newRadius;
+    b1.components = newComponents;
+    b1.colorHex = newHex;
+    b1.colorName = newName;
+
+    if (!b1.isDragging && b2.isDragging) {
+      b1.isDragging = true;
+      this.draggingBlob = b1;
+    }
+
+    this.blobs.splice(j, 1);
+
+    this.audio.play('bloop');
+    this.haptics.lightTap();
+    this.createSplashParticles(newX, newY, newHex, 8);
+
+    if (newName !== oldColorName1) {
+      const langCode = TranslationManager.getCurrent().code;
+      const spokenText = this.getColorName(newName);
+      this.audio.speak(spokenText, langCode);
+    }
+
+    return true;
   }
 
   private createSplashParticles(x: number, y: number, color: string, count: number) {
@@ -615,8 +617,7 @@ export class ColorDropperGame implements Game {
     this.ctx.globalAlpha = 1.0;
   }
 
-  pause(): void {}
-  resume(): void {}
+
 
   destroy(): void {
     window.speechSynthesis?.cancel();

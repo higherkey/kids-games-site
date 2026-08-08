@@ -14,12 +14,12 @@ export interface Game {
   /**
    * Pauses the game.
    */
-  pause(): void;
+  pause?(): void;
 
   /**
    * Resumes the game from a paused state.
    */
-  resume(): void;
+  resume?(): void;
 
   /**
    * Cleans up resources, event listeners, etc.

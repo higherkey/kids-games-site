@@ -1,14 +1,6 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 
-export class TwoProngOutlet implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-
+export class TwoProngOutlet extends BaseBusyBoardModule {
   private isPluggedIn = false;
   private isDragging = false;
   private plugX = 0;
@@ -17,22 +9,9 @@ export class TwoProngOutlet implements BusyBoardModule {
   private batteryCharge = 0.1;
   private lastTime = 0;
 
-  private audio: AudioController;
-  private haptics: HapticController;
-
   constructor(id: string, x: number, y: number, w: number, h: number) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super(id, x, y, w, h);
   }
-
-  public init(): void {}
-
-  public setPowerState(_hasPower: boolean): void {}
 
   public render(ctx: CanvasRenderingContext2D, px: number, py: number, pw: number, ph: number): void {
     const margin = 10;
@@ -201,7 +180,6 @@ export class TwoProngOutlet implements BusyBoardModule {
     ctx.beginPath();
     ctx.moveTo(cordStartX, cordStartY);
     // Control points for a natural hanging curve
-    const midX = (cordStartX + currentPlugX) / 2;
     const midY = Math.max(cordStartY, currentPlugY) + 30;
     ctx.bezierCurveTo(cordStartX, midY, currentPlugX, midY, currentPlugX, currentPlugY);
     ctx.stroke();
@@ -317,7 +295,7 @@ export class TwoProngOutlet implements BusyBoardModule {
     this.isDragging = false;
   }
 
-  public destroy(): void {}
+
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     if (w < 2 * r) r = w / 2;

@@ -87,25 +87,25 @@ describe('MarblePipeGame', () => {
 
   it('should add sandbox parts (ramp, bumper, booster) to the engine world', () => {
     game.init(canvas);
-    expect((game as any).parts.length).toBe(0);
+    expect((game as any).parts).toHaveLength(0);
 
     // Place a ramp
     (game as any).addPart('ramp');
-    expect((game as any).parts.length).toBe(1);
+    expect((game as any).parts).toHaveLength(1);
     expect((game as any).parts[0].type).toBe('ramp');
     
     // Place a bumper
     (game as any).addPart('bumper');
-    expect((game as any).parts.length).toBe(2);
+    expect((game as any).parts).toHaveLength(2);
     expect((game as any).parts[1].type).toBe('bumper');
   });
 
   it('should drop a marble from the starting funnel', () => {
     game.init(canvas);
-    expect((game as any).marbles.length).toBe(0);
+    expect((game as any).marbles).toHaveLength(0);
 
     (game as any).spawnMarble();
-    expect((game as any).marbles.length).toBe(1);
+    expect((game as any).marbles).toHaveLength(1);
   });
 
   it('should clear all placed parts and marbles when clearBoard is triggered', () => {
@@ -114,13 +114,13 @@ describe('MarblePipeGame', () => {
     (game as any).addPart('ramp');
     (game as any).spawnMarble();
     
-    expect((game as any).parts.length).toBe(1);
-    expect((game as any).marbles.length).toBe(1);
+    expect((game as any).parts).toHaveLength(1);
+    expect((game as any).marbles).toHaveLength(1);
 
     // Clear board
     (game as any).clearBoard();
-    expect((game as any).parts.length).toBe(0);
-    expect((game as any).marbles.length).toBe(0);
+    expect((game as any).parts).toHaveLength(0);
+    expect((game as any).marbles).toHaveLength(0);
     expect((game as any).gameWon).toBe(false);
   });
 

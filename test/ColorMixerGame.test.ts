@@ -90,7 +90,7 @@ describe('ColorMixerGame', () => {
     expect(canvas.getContext).toHaveBeenCalledWith('2d');
     
     const wells = (game as any).wells;
-    expect(wells.length).toBe(6); // Red, Yellow, Blue, White, Black, Finger
+    expect(wells).toHaveLength(6); // Red, Yellow, Blue, White, Black, Finger
     expect(wells[0].id).toBe('red');
     expect(wells[1].id).toBe('yellow');
     expect(wells[2].id).toBe('blue');

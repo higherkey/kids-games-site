@@ -1,34 +1,16 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 
-export class PullStringCord implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-
+export class PullStringCord extends BaseBusyBoardModule {
   private isOn = false;
   private hasPower = true;
-  private audio: AudioController;
-  private haptics: HapticController;
 
   private isDragging = false;
   private dragOffset = 0; // vertical drag offset of cord handle
-  private maxDrag = 80;   // maximum pull distance
+  private readonly maxDrag = 80;   // maximum pull distance
 
   constructor(id: string, x: number, y: number, w: number, h: number) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super(id, x, y, w, h);
   }
-
-  public init(): void {}
 
   public setPowerState(hasPower: boolean): void {
     this.hasPower = hasPower;
@@ -167,7 +149,7 @@ export class PullStringCord implements BusyBoardModule {
     const handleY = stringRestY + this.dragOffset;
 
     // Detect click in surrounding area of handle ring
-    const dist = Math.sqrt((x - centerX) ** 2 + (y - handleY) ** 2);
+    const dist = Math.hypot(x - centerX, y - handleY);
     if (dist < 30) {
       this.isDragging = true;
       return true;
@@ -209,7 +191,7 @@ export class PullStringCord implements BusyBoardModule {
     this.isDragging = false;
   }
   
-  public destroy(): void {}
+
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     if (w < 2 * r) r = w / 2;

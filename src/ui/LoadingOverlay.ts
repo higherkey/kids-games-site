@@ -5,7 +5,7 @@
 import './LoadingOverlay.css';
 
 export class LoadingOverlay {
-  private element: HTMLElement;
+  private readonly element: HTMLElement;
   private timeoutId: number | null = null;
   private isVisible: boolean = false;
 

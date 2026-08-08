@@ -1,10 +1,10 @@
-import type { Game } from '../../core/Game';
-import { AudioController } from '../../core/AudioController';
-import { HapticController } from '../../core/HapticController';
+import { BaseGame } from '../../core/BaseGame';
 import { TranslationManager } from '../../core/TranslationManager';
 
+type PaintToolId = 'red' | 'yellow' | 'blue' | 'white' | 'black' | 'finger';
+
 interface PaintWell {
-  id: 'red' | 'yellow' | 'blue' | 'white' | 'black' | 'finger';
+  id: PaintToolId;
   colorHex: string | null; // null for finger/smudge
   labelKey: string;
   x: number;
@@ -32,59 +32,50 @@ const PALETTE_NAMES: Record<string, Record<string, string>> = {
   ru: { red: 'Красный', yellow: 'Желтый', blue: 'Синий', white: 'Белый', black: 'Черный', finger: 'Палец' }
 };
 
-export class ColorMixerGame implements Game {
-  private canvas: HTMLCanvasElement | null = null;
-  private ctx: CanvasRenderingContext2D | null = null;
-  private audio: AudioController;
-  private haptics: HapticController;
-
+export class ColorMixerGame extends BaseGame {
   // Buffering canvas for the paint layer
   private bufferCanvas: HTMLCanvasElement | null = null;
   private bufferCtx: CanvasRenderingContext2D | null = null;
 
   // Active Tool Selection
-  private activeTool: 'red' | 'yellow' | 'blue' | 'white' | 'black' | 'finger' = 'red';
+  private activeTool: PaintToolId = 'red';
 
   // Smudge Drag History
   private isDrawing = false;
   private lastPos = { x: 0, y: 0 };
-  private brushRadius = 26;
+  private readonly brushRadius = 26;
   private audioThrottleTime = 0;
 
   // UI Palette details
-  private potsY = 20;
-  private potsHeight = 70;
+  private readonly potsY = 20;
+  private readonly potsHeight = 70;
   private wells: PaintWell[] = [];
 
-  constructor() {
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
-  }
 
-  init(canvas: HTMLCanvasElement): void {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
+
+  protected onInit(): void {
+    if (!this.canvas) return;
 
     // Setup buffer canvas to draw paint layers
     this.bufferCanvas = document.createElement('canvas');
-    this.bufferCanvas.width = canvas.width;
-    this.bufferCanvas.height = canvas.height;
+    this.bufferCanvas.width = this.canvas.width;
+    this.bufferCanvas.height = this.canvas.height;
     this.bufferCtx = this.bufferCanvas.getContext('2d');
     
     // Clear paint layer to parchment color
     if (this.bufferCtx) {
       this.bufferCtx.fillStyle = '#F4ECD8';
-      this.bufferCtx.fillRect(0, 0, canvas.width, canvas.height);
+      this.bufferCtx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
     this.setupWells();
 
-    canvas.addEventListener('touchstart', this.handleTouchStart, { passive: false });
-    canvas.addEventListener('touchmove', this.handleTouchMove, { passive: false });
-    canvas.addEventListener('touchend', this.handleTouchEnd, { passive: false });
-    canvas.addEventListener('mousedown', this.handleMouseDown);
-    canvas.addEventListener('mousemove', this.handleMouseMove);
-    canvas.addEventListener('mouseup', this.handleMouseUp);
+    this.canvas.addEventListener('touchstart', this.handleTouchStart, { passive: false });
+    this.canvas.addEventListener('touchmove', this.handleTouchMove, { passive: false });
+    this.canvas.addEventListener('touchend', this.handleTouchEnd, { passive: false });
+    this.canvas.addEventListener('mousedown', this.handleMouseDown);
+    this.canvas.addEventListener('mousemove', this.handleMouseMove);
+    this.canvas.addEventListener('mouseup', this.handleMouseUp);
   }
 
   private setupWells() {
@@ -122,29 +113,29 @@ export class ColorMixerGame implements Game {
     return dict[key] || key;
   }
 
-  private handleMouseDown = (e: MouseEvent) => {
+  private readonly handleMouseDown = (e: MouseEvent) => {
     const pos = this.getCanvasPos(e.clientX, e.clientY);
     this.startPress(pos.x, pos.y);
   };
 
-  private handleMouseMove = (e: MouseEvent) => {
+  private readonly handleMouseMove = (e: MouseEvent) => {
     if (!this.isDrawing) return;
     const pos = this.getCanvasPos(e.clientX, e.clientY);
     this.movePress(pos.x, pos.y);
   };
 
-  private handleMouseUp = () => {
+  private readonly handleMouseUp = () => {
     this.endPress();
   };
 
-  private handleTouchStart = (e: TouchEvent) => {
+  private readonly handleTouchStart = (e: TouchEvent) => {
     e.preventDefault();
     const touch = e.changedTouches[0];
     const pos = this.getCanvasPos(touch.clientX, touch.clientY);
     this.startPress(pos.x, pos.y);
   };
 
-  private handleTouchMove = (e: TouchEvent) => {
+  private readonly handleTouchMove = (e: TouchEvent) => {
     e.preventDefault();
     if (!this.isDrawing) return;
     const touch = e.changedTouches[0];
@@ -152,7 +143,7 @@ export class ColorMixerGame implements Game {
     this.movePress(pos.x, pos.y);
   };
 
-  private handleTouchEnd = (e: TouchEvent) => {
+  private readonly handleTouchEnd = (e: TouchEvent) => {
     e.preventDefault();
     this.endPress();
   };
@@ -420,8 +411,7 @@ export class ColorMixerGame implements Game {
     this.ctx.fillText('Choose color to place drops • Drag finger to smear & mix!', this.canvas.width / 2, this.potsY + this.potsHeight + 25);
   }
 
-  pause(): void {}
-  resume(): void {}
+
 
   destroy(): void {
     window.speechSynthesis?.cancel();

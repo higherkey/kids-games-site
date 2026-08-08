@@ -1,6 +1,5 @@
-import type { Game } from '../../core/Game';
-import { AudioController } from '../../core/AudioController';
-import { HapticController } from '../../core/HapticController';
+import { BaseGame } from '../../core/BaseGame';
+import { ToneAudioController } from '../../core/ToneAudioController';
 
 interface SoundPad {
   x: number;
@@ -15,11 +14,7 @@ interface SoundPad {
   active: number;
 }
 
-export class SoundBoardGame implements Game {
-  private canvas: HTMLCanvasElement | null = null;
-  private ctx: CanvasRenderingContext2D | null = null;
-  private readonly haptics: HapticController;
-  private readonly audio: AudioController;
+export class SoundBoardGame extends BaseGame {
   private pads: SoundPad[] = [];
   private paused = false;
 
@@ -35,19 +30,14 @@ export class SoundBoardGame implements Game {
     { color: '#F472B6', activeColor: '#F9A8D4', label: 'Thump', instrument: 'drum', note: 'E2' },
   ];
 
-  constructor() {
-    this.haptics = HapticController.getInstance();
-    this.audio = AudioController.getInstance();
-  }
 
-  init(canvas: HTMLCanvasElement): void {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
+
+  protected onInit(): void {
     this.paused = false;
     this.buildGrid();
 
-    canvas.addEventListener('mousedown', this.handleMouse);
-    canvas.addEventListener('touchstart', this.handleTouch);
+    this.canvas?.addEventListener('mousedown', this.handleMouse);
+    this.canvas?.addEventListener('touchstart', this.handleTouch);
   }
 
   private buildGrid() {
@@ -118,7 +108,8 @@ export class SoundBoardGame implements Game {
   private triggerPad(pad: SoundPad) {
     pad.active = 1.0;
     this.haptics.lightTap();
-    this.audio.play(`synth:${pad.instrument}`, pad.note);
+    const padIndex = this.pads.indexOf(pad);
+    ToneAudioController.getInstance().playSoundBoardNote(padIndex >= 0 ? padIndex : 0, 5);
   }
 
   update(dt: number): void {

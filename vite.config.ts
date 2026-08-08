@@ -20,9 +20,9 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: 'Kipu',
           short_name: 'Kipu',
-          description: 'A tactile, educational, and sensory mini-game suite for children',
-          theme_color: '#ffffff',
-          background_color: '#ffffff',
+          description: 'A tactile, educational, and sensory mini-game suite for children — inspired by the Andean khipu.',
+          theme_color: '#3D2B1F',
+          background_color: '#F5EDD8',
           display: 'fullscreen',
           orientation: 'portrait',
           icons: [

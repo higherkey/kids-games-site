@@ -1,34 +1,16 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 
-export class BreakerLever implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-
+export class BreakerLever extends BaseBusyBoardModule {
   private isPowerOn = true; // True = power connected (Up), False = power cut (Down)
-  private audio: AudioController;
-  private haptics: HapticController;
   
   private dragProgress = 0.0; // 0 (Up/On) to 1 (Down/Off)
   private isDragging = false;
-  private onPowerChangedCallback?: (hasPower: boolean) => void;
+  private readonly onPowerChangedCallback?: (hasPower: boolean) => void;
 
   constructor(id: string, x: number, y: number, w: number, h: number, onPowerChanged?: (hasPower: boolean) => void) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super(id, x, y, w, h);
     this.onPowerChangedCallback = onPowerChanged;
   }
-
-  public init(): void {}
 
   public render(ctx: CanvasRenderingContext2D, px: number, py: number, pw: number, ph: number): void {
     const margin = 10;
@@ -217,7 +199,7 @@ export class BreakerLever implements BusyBoardModule {
     this.dragProgress = this.isPowerOn ? 0.0 : 1.0;
   }
   
-  public destroy(): void {}
+
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     if (w < 2 * r) r = w / 2;

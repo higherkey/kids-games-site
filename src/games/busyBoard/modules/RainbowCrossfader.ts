@@ -1,36 +1,46 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 import type { LuminaryBoardGame } from '../LuminaryBoardGame';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
+import { ToneAudioController } from '../../../core/ToneAudioController';
 
-export class RainbowCrossfader implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-  private game: LuminaryBoardGame;
+function hslToRgb(h: number, s: number, l: number) {
+  h /= 360;
+  let r: number, g: number, b: number;
+  if (s === 0) {
+    r = g = b = l;
+  } else {
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    const hue2rgb = (t: number) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    };
+    r = hue2rgb(h + 1 / 3);
+    g = hue2rgb(h);
+    b = hue2rgb(h - 1 / 3);
+  }
+  return { red: Math.round(r * 255), green: Math.round(g * 255), blue: Math.round(b * 255) };
+}
+
+export class RainbowCrossfader extends BaseBusyBoardModule {
+  private readonly game: LuminaryBoardGame;
   private value = 0.5; // 0.0 to 1.0 (maps to HSL 0-360)
   private isDragging = false;
-  private audio: AudioController;
-  private haptics: HapticController;
   private lastTickValue = 0.5;
   private trailPoints: { x: number; y: number; color: string; alpha: number }[] = [];
 
   constructor(id: string, x: number, y: number, w: number, h: number, game: LuminaryBoardGame) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
+    super(id, x, y, w, h);
     this.game = game;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
   }
 
-  public init(): void {}
+  private animPhase = 0;
 
   public render(ctx: CanvasRenderingContext2D, px: number, py: number, pw: number, ph: number): void {
+    this.animPhase += 0.05;
     const theme = this.game.getTheme();
     const margin = 12;
     const mx = px + margin;
@@ -116,6 +126,19 @@ export class RainbowCrossfader implements BusyBoardModule {
     const knobX = trackStartX + this.value * trackWidth;
     const activeColor = `hsl(${this.value * 360}, 100%, 50%)`;
 
+    // Tailored HSL Spectral Knob Aura (only while dragging)
+    if (this.isDragging) {
+      ctx.save();
+      const auraGrad = ctx.createRadialGradient(knobX, trackStartY, 4, knobX, trackStartY, 22);
+      auraGrad.addColorStop(0, activeColor);
+      auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = auraGrad;
+      ctx.beginPath();
+      ctx.arc(knobX, trackStartY, 22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,0.2)';
     ctx.shadowBlur = 6;
@@ -159,7 +182,7 @@ export class RainbowCrossfader implements BusyBoardModule {
 
     const dx = x - knobX;
     const dy = y - trackStartY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = Math.hypot(dx, dy);
 
     if (dist <= 25) {
       this.isDragging = true;
@@ -198,6 +221,10 @@ export class RainbowCrossfader implements BusyBoardModule {
       alpha: 1.0
     });
 
+    // Modulate Light Board Tone dynamically based on current HSL -> RGB
+    const rgb = hslToRgb(this.value * 360, 1.0, 0.5);
+    ToneAudioController.getInstance().updateLightBoardTone(rgb);
+
     // Play chord sweeps using synth:pluck
     if (Math.abs(this.value - this.lastTickValue) >= 0.05) {
       const pitch = 250 + this.value * 450;
@@ -210,18 +237,17 @@ export class RainbowCrossfader implements BusyBoardModule {
   public handlePointerUp(): void {
     if (this.isDragging) {
       this.isDragging = false;
+      ToneAudioController.getInstance().stopLightBoardTone();
       this.audio.play('synth:click', 350);
     }
   }
 
-  public destroy(): void {}
+
 
   private updateTrail() {
-    // Fade out and remove old trail points
+    // Fade out and remove old trail points (no random drift — keeps animation smooth)
     this.trailPoints.forEach(pt => {
       pt.alpha -= 0.05;
-      // Add a slight jitter/drift for visual flare
-      pt.y += (Math.random() - 0.5) * 1.5;
     });
     this.trailPoints = this.trailPoints.filter(pt => pt.alpha > 0);
   }

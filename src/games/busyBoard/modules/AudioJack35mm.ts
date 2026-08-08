@@ -1,14 +1,6 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 
-export class AudioJack35mm implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-
+export class AudioJack35mm extends BaseBusyBoardModule {
   private isPluggedIn = false;
   private isDragging = false;
   private plugX = 0;
@@ -17,20 +9,9 @@ export class AudioJack35mm implements BusyBoardModule {
   private soundWaveAngle = 0;
   private loopInterval: any = null;
 
-  private audio: AudioController;
-  private haptics: HapticController;
-
   constructor(id: string, x: number, y: number, w: number, h: number) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super(id, x, y, w, h);
   }
-
-  public init(): void {}
 
   private startLoop() {
     if (this.loopInterval) return;
@@ -51,7 +32,7 @@ export class AudioJack35mm implements BusyBoardModule {
     }
   }
 
-  public setPowerState(_hasPower: boolean): void {}
+
 
   public render(ctx: CanvasRenderingContext2D, px: number, py: number, pw: number, ph: number): void {
     const margin = 10;
@@ -311,7 +292,6 @@ export class AudioJack35mm implements BusyBoardModule {
     const currentPlugY = this.isPluggedIn ? socketY + 8 : this.plugY;
 
     // Expand click radius slightly for small mobile hits
-    const hitAreaHeight = this.isPluggedIn ? 30 : 60;
     const clickDist = Math.hypot(x - currentPlugX, y - (currentPlugY + (this.isPluggedIn ? 10 : 20)));
 
     if (clickDist <= 30) {
