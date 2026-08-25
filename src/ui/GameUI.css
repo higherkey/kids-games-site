@@ -144,8 +144,10 @@
 }
 
 .slide-menu-close-btn {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: var(--radius-sm);
   border: 2px solid var(--fg);
   background-color: var(--cord);
@@ -154,7 +156,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 3px 0px var(--fg);
+  box-shadow: 0 var(--shadow-depth) 0px var(--fg);
   transition: transform 0.08s ease, box-shadow 0.08s ease;
   padding: 0;
 }

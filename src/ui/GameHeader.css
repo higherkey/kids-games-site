@@ -6,19 +6,18 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 60px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 12px;
-  /* Parchment with a cord-fiber strip along the bottom */
   background-color: var(--bg);
   border-bottom: 3px solid var(--fg);
-  /* Decorative "cord" fiber line */
   box-shadow:
     0 3px 0px var(--cord),
     0 6px 20px rgba(43, 45, 94, 0.12);
   z-index: 100;
+  gap: 8px;
 }
 
 #game-header.hidden {
@@ -35,8 +34,9 @@
 
 /* HUD buttons */
 .header-btn {
-  height: 40px;
-  min-width: 40px;
+  height: 44px;
+  min-height: 44px;
+  min-width: 44px;
   border-radius: var(--radius-sm);
   border: 2px solid var(--fg);
   background-color: var(--cord);
@@ -46,13 +46,14 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  box-shadow: 0 3px 0px var(--fg);
+  box-shadow: 0 var(--shadow-depth) 0px var(--fg);
   transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.15s ease;
-  padding: 0 10px;
+  padding: 0 12px;
   font-family: 'Fredoka', sans-serif;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   font-weight: 600;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .header-btn:active {
@@ -64,17 +65,29 @@
   background-color: var(--bg);
   color: var(--fg);
   border-color: var(--fg);
+  padding: 0 12px;
+  max-width: 170px;
 }
 
 .header-btn.portal-back-btn:hover {
   background-color: var(--cord);
 }
 
+.header-btn.portal-back-btn .header-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1;
+}
+
 .header-btn.home-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0;
   background-color: var(--primary);
   color: #fff;
   border-color: var(--fg);
-  padding: 0 10px;
 }
 
 .header-btn.home-btn:hover {
@@ -82,9 +95,11 @@
 }
 
 .header-btn.menu-btn {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
   padding: 0;
+  flex-shrink: 0;
 }
 
 .header-icon {
@@ -99,28 +114,46 @@
   height: 20px;
 }
 
-.header-logo {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: none;
-  font-weight: 600;
-}
-
-@media (min-width: 480px) {
-  .header-logo {
-    display: block;
-  }
-}
-
 .header-title {
-  font-size: 1.15rem;
+  font-size: clamp(0.95rem, 3.2vw, 1.25rem);
   font-weight: 600;
   color: var(--fg);
   text-align: center;
   flex: 1;
-  padding: 0 8px;
+  min-width: 0;
+  padding: 0 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (max-width: 440px) {
+  #game-header {
+    height: 56px;
+    padding: 0 8px;
+    gap: 6px;
+  }
+  .header-nav-left {
+    gap: 6px;
+  }
+  .header-btn {
+    height: 40px;
+    min-height: 40px;
+  }
+  .header-btn.portal-back-btn {
+    max-width: 120px;
+    padding: 0 8px;
+    font-size: 0.8rem;
+    gap: 4px;
+  }
+  .header-btn.home-btn,
+  .header-btn.menu-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+  }
+  .header-icon svg {
+    width: 18px;
+    height: 18px;
+  }
 }
