@@ -83,7 +83,7 @@ describe('ColorDropperGame', () => {
     expect(canvas.getContext).toHaveBeenCalledWith('2d');
     
     const pots = (game as any).pots;
-    expect(pots.length).toBe(3); // Red, Yellow, Blue
+    expect(pots).toHaveLength(3); // Red, Yellow, Blue
     expect(pots[0].labelKey).toBe('red');
     expect(pots[1].labelKey).toBe('yellow');
     expect(pots[2].labelKey).toBe('blue');
@@ -91,11 +91,11 @@ describe('ColorDropperGame', () => {
 
   it('should spawn a color blob', () => {
     game.init(canvas);
-    expect((game as any).blobs.length).toBe(0);
+    expect((game as any).blobs).toHaveLength(0);
 
     // Spawn a red blob
     (game as any).spawnBlob('red', 100, 200);
-    expect((game as any).blobs.length).toBe(1);
+    expect((game as any).blobs).toHaveLength(1);
     
     const blob = (game as any).blobs[0];
     expect(blob.colorName).toBe('red');
@@ -111,13 +111,13 @@ describe('ColorDropperGame', () => {
     (game as any).spawnBlob('red', 200, 200);
     (game as any).spawnBlob('yellow', 210, 200);
 
-    expect((game as any).blobs.length).toBe(2);
+    expect((game as any).blobs).toHaveLength(2);
 
     // Run merge check
     (game as any).checkBlobMerges();
 
     // They should merge into one orange-ish blob (closest to orange)
-    expect((game as any).blobs.length).toBe(1);
+    expect((game as any).blobs).toHaveLength(1);
     
     const merged = (game as any).blobs[0];
     expect(merged.colorName).toBe('orange');
@@ -144,13 +144,13 @@ describe('ColorDropperGame', () => {
     };
     (game as any).blobs.push(orangeBlob);
 
-    expect((game as any).blobs.length).toBe(1);
+    expect((game as any).blobs).toHaveLength(1);
 
     // 2. Trigger split
     (game as any).trySplitBlob(orangeBlob);
 
     // Should have removed orange, and added two blobs (red and yellow)
-    expect((game as any).blobs.length).toBe(2);
+    expect((game as any).blobs).toHaveLength(2);
     
     const colors = (game as any).blobs.map((b: any) => b.colorName).sort();
     expect(colors).toEqual(['red', 'yellow']);
@@ -168,11 +168,11 @@ describe('ColorDropperGame', () => {
     (game as any).spawnBlob('red', 100, 100);
     (game as any).spawnBlob('yellow', 150, 100);
     (game as any).spawnBlob('blue', 200, 100);
-    expect((game as any).blobs.length).toBe(3);
+    expect((game as any).blobs).toHaveLength(3);
 
     // Spawning 4th should pop oldest (red) and stay at limit 3
     (game as any).spawnBlob('red', 250, 100);
-    expect((game as any).blobs.length).toBe(3);
+    expect((game as any).blobs).toHaveLength(3);
 
     // First blob (oldest) should have been evicted — remaining blob IDs should start from 2
     const ids = (game as any).blobs.map((b: any) => b.id);

@@ -1,30 +1,12 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 
-export class ArcadeDome implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-
+export class ArcadeDome extends BaseBusyBoardModule {
   private isPressed = false;
   private hasPower = true;
-  private audio: AudioController;
-  private haptics: HapticController;
 
   constructor(id: string, x: number, y: number, w: number, h: number) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super(id, x, y, w, h);
   }
-
-  public init(): void {}
 
   public setPowerState(hasPower: boolean): void {
     this.hasPower = hasPower;
@@ -153,7 +135,7 @@ export class ArcadeDome implements BusyBoardModule {
     const baseRadius = Math.min(mw, mh) * 0.32;
 
     // Check hit radius
-    const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+    const dist = Math.hypot((x - centerX), (y - centerY));
     if (dist < baseRadius) {
       this.isPressed = true;
       
@@ -166,16 +148,12 @@ export class ArcadeDome implements BusyBoardModule {
     return false;
   }
 
-  public handlePointerMove(): void {}
-
   public handlePointerUp(): void {
     if (this.isPressed) {
       this.isPressed = false;
       this.haptics.lightTap();
     }
   }
-  
-  public destroy(): void {}
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     if (w < 2 * r) r = w / 2;

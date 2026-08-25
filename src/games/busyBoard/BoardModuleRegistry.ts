@@ -12,14 +12,14 @@ import { BreakerLever } from './modules/BreakerLever';
 
 // Board 2 Modules
 import { RotaryDimmer } from './modules/RotaryDimmer';
-import { ColorSlider } from './modules/ColorSlider';
+import { RGBLightModule } from './modules/RGBLightModule';
 import { RainbowCrossfader } from './modules/RainbowCrossfader';
 import { ShadowProjection } from './modules/ShadowProjection';
 import { StrobeFrequency } from './modules/StrobeFrequency';
 import { HaloExpander } from './modules/HaloExpander';
 import { ContrastInverter } from './modules/ContrastInverter';
 import { DualFingerGradient } from './modules/DualFingerGradient';
-import { RGBCanvasBlock } from './modules/RGBCanvasBlock';
+import { StereoPannerModule } from './modules/StereoPannerModule';
 
 // Board 3 Modules
 import { GearTrainTrio } from './modules/GearTrainTrio';
@@ -72,10 +72,8 @@ export const BoardModuleRegistry: Record<string, BusyBoardModuleConstructor> = {
 
   // Board 2
   '011': RotaryDimmer,
-  '012': ColorSlider,
-  '013': ColorSlider,
-  '014': ColorSlider,
-  '012b': RGBCanvasBlock,
+  '012': RGBLightModule,
+  '013': StereoPannerModule,
   '015': RainbowCrossfader,
   '016': ShadowProjection,
   '017': StrobeFrequency,

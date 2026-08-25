@@ -1,14 +1,6 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 
-export class SpringDoorstop implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-
+export class SpringDoorstop extends BaseBusyBoardModule {
   private isDragging = false;
   private tipX = 0;
   private tipY = 0;
@@ -16,27 +8,14 @@ export class SpringDoorstop implements BusyBoardModule {
   // Wobble oscillation parameters
   private isWobbling = false;
   private wobbleTimer = 0;
-  private wobbleAngle = 0;
+  private readonly wobbleAngle = 0;
   private wobbleAmpX = 0;
   private wobbleAmpY = 0;
   private setupDone = false;
 
-  private audio: AudioController;
-  private haptics: HapticController;
-
   constructor(id: string, x: number, y: number, w: number, h: number) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super(id, x, y, w, h);
   }
-
-  public init(): void {}
-
-  public setPowerState(_hasPower: boolean): void {}
 
   public render(ctx: CanvasRenderingContext2D, px: number, py: number, pw: number, ph: number): void {
     const margin = 10;
@@ -179,20 +158,11 @@ export class SpringDoorstop implements BusyBoardModule {
     }
   }
 
-  public handlePointerDown(x: number, y: number, px: number, py: number, pw: number, ph: number): boolean {
-    const margin = 10;
-    const mx = px + margin;
-    const my = py + margin;
-    const mw = pw - margin * 2;
-    const mh = ph - margin * 2;
-
-    const centerX = mx + mw / 2;
-    const baseY = my + mh * 0.35;
-
+  public handlePointerDown(x: number, y: number, _px: number, _py: number, _pw: number, _ph: number): boolean {
     // Check click distance to spring tip
     const dx = x - this.tipX;
     const dy = y - this.tipY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = Math.hypot(dx, dy);
 
     if (dist <= 25) {
       this.isDragging = true;
@@ -218,7 +188,7 @@ export class SpringDoorstop implements BusyBoardModule {
     // Drag spring tip, restrict stretch radius (max 65px from base)
     const dx = x - centerX;
     const dy = y - baseY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = Math.hypot(dx, dy);
     const maxStretch = 65;
 
     if (dist > maxStretch) {
@@ -251,7 +221,7 @@ export class SpringDoorstop implements BusyBoardModule {
       // Calculate release distance (spring tension)
       const dx = this.tipX - centerX;
       const dy = this.tipY - defaultTipY;
-      const tension = Math.sqrt(dx * dx + dy * dy);
+      const tension = Math.hypot(dx, dy);
 
       if (tension > 10) {
         this.isWobbling = true;
@@ -270,7 +240,7 @@ export class SpringDoorstop implements BusyBoardModule {
     }
   }
 
-  public destroy(): void {}
+
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     if (w < 2 * r) r = w / 2;

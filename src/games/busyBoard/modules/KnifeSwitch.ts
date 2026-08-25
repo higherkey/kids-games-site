@@ -1,36 +1,18 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 
-export class KnifeSwitch implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-
+export class KnifeSwitch extends BaseBusyBoardModule {
   private isOn = false;
   private hasPower = true;
-  private audio: AudioController;
-  private haptics: HapticController;
-  private onToggleCallback?: (state: boolean) => void;
+  private readonly onToggleCallback?: (state: boolean) => void;
 
   private isDragging = false;
   private angleProgress = 0.1; // 0 (fully open/upwards) to 1 (fully closed/downwards)
   private humTimer = 0;
 
   constructor(id: string, x: number, y: number, w: number, h: number, onToggle?: (state: boolean) => void) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super(id, x, y, w, h);
     this.onToggleCallback = onToggle;
   }
-
-  public init(): void {}
 
   public setPowerState(hasPower: boolean): void {
     this.hasPower = hasPower;
@@ -217,7 +199,7 @@ export class KnifeSwitch implements BusyBoardModule {
     const handleMidY = (leftBladeEndY + rightBladeEndY) / 2;
 
     // Hit-test against handle bar center
-    const dist = Math.sqrt((x - handleMidX) ** 2 + (y - handleMidY) ** 2);
+    const dist = Math.hypot((x - handleMidX), (y - handleMidY));
     if (dist < 35) {
       this.isDragging = true;
       return true;
@@ -268,7 +250,7 @@ export class KnifeSwitch implements BusyBoardModule {
     }
   }
 
-  public destroy(): void {}
+
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     if (w < 2 * r) r = w / 2;

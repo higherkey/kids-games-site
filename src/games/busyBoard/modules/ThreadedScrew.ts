@@ -1,38 +1,16 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 
-export class ThreadedScrew implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-
+export class ThreadedScrew extends BaseBusyBoardModule {
   private isDragging = false;
   private screwAngle = 0; // rotation angle
   private lastTouchAngle = 0;
-  
   private depth = 0; // 0.0 (flush/unscrewed) to 1.0 (tight/screwed in)
-  private maxDepth = 1.0;
-
-  private audio: AudioController;
-  private haptics: HapticController;
+  private readonly maxDepth = 1.0;
   private lastTickAngle = 0;
 
   constructor(id: string, x: number, y: number, w: number, h: number) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super(id, x, y, w, h);
   }
-
-  public init(): void {}
-
-  public setPowerState(_hasPower: boolean): void {}
 
   public render(ctx: CanvasRenderingContext2D, px: number, py: number, pw: number, ph: number): void {
     const margin = 10;
@@ -148,7 +126,7 @@ export class ThreadedScrew implements BusyBoardModule {
 
     const dx = x - centerX;
     const dy = y - centerY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = Math.hypot(dx, dy);
 
     if (dist <= screwR + 15) {
       this.isDragging = true;
@@ -187,7 +165,6 @@ export class ThreadedScrew implements BusyBoardModule {
     const lastIntDepth = Math.round(this.depth * 10);
     this.depth += delta * 0.04;
     this.depth = Math.max(0, Math.min(this.maxDepth, this.depth));
-    const currentIntDepth = Math.round(this.depth * 10);
 
     // Play metal clicks on rotation depth ticks
     if (Math.abs(this.screwAngle - this.lastTickAngle) >= 0.35) {
@@ -210,7 +187,7 @@ export class ThreadedScrew implements BusyBoardModule {
     }
   }
 
-  public destroy(): void {}
+
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     if (w < 2 * r) r = w / 2;

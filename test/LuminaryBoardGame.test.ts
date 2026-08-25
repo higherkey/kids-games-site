@@ -118,16 +118,24 @@ describe('LuminaryBoardGame', () => {
   });
 
   it('should update RGB state', () => {
-    game.updateRGB('r', 0.8);
-    expect(game.getRGB().r).toBe(0.8);
+    game.updateRGB('r', 200);
+    expect(game.getRGB().r).toBe(200);
   });
 
-  it('should instantiate RGBCanvasBlock (012b) in modules list', () => {
+  it('should instantiate RGBLightModule (012) in modules list', () => {
     const modules = (game as any).modules;
-    const rgbBlock = modules.find((m: any) => m.id === '012b');
+    const rgbBlock = modules.find((m: any) => m.id === '012');
     expect(rgbBlock).toBeDefined();
-    expect(rgbBlock.w).toBe(1);
+    expect(rgbBlock.w).toBe(2);
     expect(rgbBlock.h).toBe(2);
+  });
+
+  it('should instantiate StereoPannerModule (013) in modules list', () => {
+    const modules = (game as any).modules;
+    const panner = modules.find((m: any) => m.id === '013');
+    expect(panner).toBeDefined();
+    expect(panner.w).toBe(1);
+    expect(panner.h).toBe(1);
   });
 
   it('should update and render without errors', () => {

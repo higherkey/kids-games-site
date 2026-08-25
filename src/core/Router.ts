@@ -5,7 +5,7 @@ export type RouteHandler = (params?: Record<string, string>) => void;
  * Handles URL navigation using the History API.
  */
 export class Router {
-  private routes: Map<string, RouteHandler> = new Map();
+  private readonly routes: Map<string, RouteHandler> = new Map();
 
   constructor() {
     window.addEventListener('popstate', () => {
@@ -58,37 +58,10 @@ export class Router {
   }
 
   private handleRoute(path: string): void {
-    // Exact match
-    if (this.routes.has(path)) {
-      const handler = this.routes.get(path);
-      if (handler) {
-        handler();
-        return;
-      }
-    }
-
-    // Dynamic game route: /game/[id]
-    if (path.startsWith('/game/')) {
-      const gameId = path.substring(6); // Remove '/game/'
-      if (gameId) {
-        const handler = this.routes.get('/game/:id');
-        if (handler) {
-          handler({ id: gameId });
-          return;
-        }
-      }
-    }
-
-    // Dynamic portal route: /portal/[id]
-    if (path.startsWith('/portal/')) {
-      const portalId = path.substring(8); // Remove '/portal/'
-      if (portalId) {
-        const handler = this.routes.get('/portal/:portalId');
-        if (handler) {
-          handler({ portalId: portalId });
-          return;
-        }
-      }
+    const matched = this.matchRoute(path);
+    if (matched) {
+      matched.handler(matched.params);
+      return;
     }
 
     // Default: Fallback to Not Found if no match
@@ -106,5 +79,33 @@ export class Router {
       }
       rootHandler();
     }
+  }
+
+  private matchRoute(path: string): { handler: RouteHandler; params?: Record<string, string> } | null {
+    // Exact match
+    const exactHandler = this.routes.get(path);
+    if (exactHandler) {
+      return { handler: exactHandler };
+    }
+
+    // Dynamic game route: /game/[id]
+    if (path.startsWith('/game/')) {
+      const gameId = path.substring(6);
+      const handler = gameId ? this.routes.get('/game/:id') : null;
+      if (handler) {
+        return { handler, params: { id: gameId } };
+      }
+    }
+
+    // Dynamic portal route: /portal/[id]
+    if (path.startsWith('/portal/')) {
+      const portalId = path.substring(8);
+      const handler = portalId ? this.routes.get('/portal/:portalId') : null;
+      if (handler) {
+        return { handler, params: { portalId } };
+      }
+    }
+
+    return null;
   }
 }

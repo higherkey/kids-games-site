@@ -1,34 +1,16 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 
-export class KeyRotation implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-
+export class KeyRotation extends BaseBusyBoardModule {
   private isUnlocked = false;
   private hasPower = true;
-  private audio: AudioController;
-  private haptics: HapticController;
 
   private isDragging = false;
   private rotationAngle = 0; // Current angle in radians (0 to Math.PI/2)
   private lastAngle = 0;
   
   constructor(id: string, x: number, y: number, w: number, h: number) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super(id, x, y, w, h);
   }
-
-  public init(): void {}
 
   public setPowerState(hasPower: boolean): void {
     this.hasPower = hasPower;
@@ -175,7 +157,7 @@ export class KeyRotation implements BusyBoardModule {
     const centerY = my + mh / 2 + 10;
 
     // Detect touch near the key bow or stem
-    const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+    const dist = Math.hypot(x - centerX, y - centerY);
     if (dist < 45) {
       this.isDragging = true;
       this.lastAngle = Math.atan2(y - centerY, x - centerX);
@@ -244,7 +226,7 @@ export class KeyRotation implements BusyBoardModule {
     this.rotationAngle = targetAngle;
   }
   
-  public destroy(): void {}
+
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     if (w < 2 * r) r = w / 2;

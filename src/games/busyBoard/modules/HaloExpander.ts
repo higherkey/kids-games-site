@@ -1,37 +1,22 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 import type { LuminaryBoardGame } from '../LuminaryBoardGame';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
 
-export class HaloExpander implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-  private game: LuminaryBoardGame;
+export class HaloExpander extends BaseBusyBoardModule {
+  private readonly game: LuminaryBoardGame;
 
   private knobAngle = 0; // angle in radians
   private haloRadius = 15; // dynamic radius
   private isDragging = false;
-  private audio: AudioController;
-  private haptics: HapticController;
   private lastTickValue = 0;
+  private animPhase = 0;
 
   constructor(id: string, x: number, y: number, w: number, h: number, game: LuminaryBoardGame) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
+    super(id, x, y, w, h);
     this.game = game;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
   }
 
-  public init(): void {}
-
   public render(ctx: CanvasRenderingContext2D, px: number, py: number, pw: number, ph: number): void {
+    this.animPhase += 0.05;
     const theme = this.game.getTheme();
     const margin = 12;
     const mx = px + margin;
@@ -80,9 +65,22 @@ export class HaloExpander implements BusyBoardModule {
     ctx.restore();
 
     // 1. Draw glowing Halo at the top
-    const haloY = my + mh * 0.3;
-    const activeColor = theme === 'paper' ? 'rgba(255, 140, 0, 0.45)' : 'rgba(0, 255, 204, 0.5)';
-    const outerGlow = theme === 'paper' ? 'rgba(255, 200, 100, 0)' : 'rgba(0, 150, 255, 0)';
+  const haloY = my + mh * 0.3;
+  const activeColor = theme === 'paper' ? 'rgba(255, 140, 0, 0.45)' : 'rgba(0, 255, 204, 0.5)';
+  const outerGlow = theme === 'paper' ? 'rgba(255, 200, 100, 0)' : 'rgba(0, 150, 255, 0)';
+
+  // Tailored Always-on Breathing Halo Glow Ring
+  ctx.save();
+  const breath = Math.sin(this.animPhase * 2) * 3;
+  const glowRadius = this.haloRadius + 4 + breath;
+  ctx.shadowColor = theme === 'paper' ? '#FF8C00' : '#00FFCC';
+  ctx.shadowBlur = 10;
+  ctx.strokeStyle = theme === 'paper' ? 'rgba(255, 140, 0, 0.4)' : 'rgba(0, 255, 204, 0.5)';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(centerX, haloY, glowRadius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
 
     ctx.save();
     const grad = ctx.createRadialGradient(centerX, haloY, 2, centerX, haloY, this.haloRadius);
@@ -156,7 +154,7 @@ export class HaloExpander implements BusyBoardModule {
 
     const dx = x - centerX;
     const dy = y - centerY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = Math.hypot(dx, dy);
 
     if (dist <= knobRadius + 15) {
       this.isDragging = true;
@@ -208,7 +206,7 @@ export class HaloExpander implements BusyBoardModule {
     }
   }
 
-  public destroy(): void {}
+
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     if (w < 2 * r) r = w / 2;

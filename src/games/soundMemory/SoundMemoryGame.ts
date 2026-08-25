@@ -1,6 +1,4 @@
-import type { Game } from '../../core/Game';
-import { AudioController } from '../../core/AudioController';
-import { HapticController } from '../../core/HapticController';
+import { BaseGame } from '../../core/BaseGame';
 
 interface SoundButton {
   id: number;
@@ -20,35 +18,24 @@ type GamePhase = 'ready' | 'show' | 'wait' | 'play' | 'won' | 'lost';
  * Sound Memory: Simon-style auditory pattern recognition.
  * Players repeat the sequence of sounds shown by the game.
  */
-export class SoundMemoryGame implements Game {
-  private canvas: HTMLCanvasElement | null = null;
-  private ctx: CanvasRenderingContext2D | null = null;
+export class SoundMemoryGame extends BaseGame {
   private buttons: SoundButton[] = [];
-  private audio: AudioController;
-  private haptics: HapticController;
 
-  private sequence: number[] = [];
+  private readonly sequence: number[] = [];
   private playerSequence: number[] = [];
   private phase: GamePhase = 'ready';
   private level = 0;
-  private highlightDuration = 400; // ms per highlight
-  private activeTimeouts: any[] = [];
+  private readonly highlightDuration = 400; // ms per highlight
+  private activeTimeouts: ReturnType<typeof setTimeout>[] = [];
 
-  constructor() {
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
-  }
-
-  init(canvas: HTMLCanvasElement): void {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
+  protected onInit(): void {
     this.activeTimeouts = [];
 
     this.createButtons();
     this.startNewRound();
 
-    canvas.addEventListener('touchstart', this.handleTouch);
-    canvas.addEventListener('mousedown', this.handleMouseDown);
+    this.canvas?.addEventListener('touchstart', this.handleTouch);
+    this.canvas?.addEventListener('mousedown', this.handleMouseDown);
   }
 
   private createButtons() {
@@ -133,13 +120,13 @@ export class SoundMemoryGame implements Game {
     return { x: clientX - rect.left, y: clientY - rect.top };
   }
 
-  private handleTouch = (e: TouchEvent) => {
+  private readonly handleTouch = (e: TouchEvent) => {
     const touch = e.changedTouches[0];
     const pos = this.getCanvasPos(touch.clientX, touch.clientY);
     this.handleButtonPress(pos.x, pos.y);
   };
 
-  private handleMouseDown = (e: MouseEvent) => {
+  private readonly handleMouseDown = (e: MouseEvent) => {
     const pos = this.getCanvasPos(e.clientX, e.clientY);
     this.handleButtonPress(pos.x, pos.y);
   };
@@ -148,7 +135,7 @@ export class SoundMemoryGame implements Game {
     if (this.phase !== 'play') return;
 
     for (const button of this.buttons) {
-      const dist = Math.sqrt((x - button.x) ** 2 + (y - button.y) ** 2);
+      const dist = Math.hypot((x - button.x), (y - button.y));
       if (dist < button.radius) {
         this.activateButton(button.id);
         break;
@@ -169,7 +156,7 @@ export class SoundMemoryGame implements Game {
       button.isActive = false;
       
       // Check if player made a mistake
-      if (this.playerSequence[this.playerSequence.length - 1] !== this.sequence[this.playerSequence.length - 1]) {
+      if (this.playerSequence.at(-1) !== this.sequence[this.playerSequence.length - 1]) {
         this.phase = 'lost';
         return;
       }
@@ -294,14 +281,13 @@ export class SoundMemoryGame implements Game {
 
   private lightenColor(color: string, factor: number): string {
     const hex = color.replace('#', '');
-    const r = Math.min(255, Math.round(parseInt(hex.substring(0, 2), 16) + (255 - parseInt(hex.substring(0, 2), 16)) * factor));
-    const g = Math.min(255, Math.round(parseInt(hex.substring(2, 4), 16) + (255 - parseInt(hex.substring(2, 4), 16)) * factor));
-    const b = Math.min(255, Math.round(parseInt(hex.substring(4, 6), 16) + (255 - parseInt(hex.substring(4, 6), 16)) * factor));
+    const r = Math.min(255, Math.round(Number.parseInt(hex.substring(0, 2), 16) + (255 - Number.parseInt(hex.substring(0, 2), 16)) * factor));
+    const g = Math.min(255, Math.round(Number.parseInt(hex.substring(2, 4), 16) + (255 - Number.parseInt(hex.substring(2, 4), 16)) * factor));
+    const b = Math.min(255, Math.round(Number.parseInt(hex.substring(4, 6), 16) + (255 - Number.parseInt(hex.substring(4, 6), 16)) * factor));
     return `rgb(${r}, ${g}, ${b})`;
   }
 
-  pause(): void {}
-  resume(): void {}
+
 
   destroy(): void {
     if (this.canvas) {

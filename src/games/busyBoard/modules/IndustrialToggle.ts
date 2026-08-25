@@ -1,6 +1,4 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 
 interface Spark {
   x: number;
@@ -12,21 +10,13 @@ interface Spark {
   color: string;
 }
 
-export class IndustrialToggle implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-
+export class IndustrialToggle extends BaseBusyBoardModule {
   private isOn = false;
   private hasPower = true;
-  private audio: AudioController;
-  private haptics: HapticController;
-  private onToggleCallback?: (state: boolean) => void;
+  private readonly onToggleCallback?: (state: boolean) => void;
 
   // Particle sparks
-  private sparks: Spark[] = [];
+  private readonly sparks: Spark[] = [];
   
   // Dragging state
   private isDragging = false;
@@ -34,18 +24,10 @@ export class IndustrialToggle implements BusyBoardModule {
   private currentLeverOffset = 0; // -1 to 1 representing toggle position
 
   constructor(id: string, x: number, y: number, w: number, h: number, onToggle?: (state: boolean) => void) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
+    super(id, x, y, w, h);
     this.onToggleCallback = onToggle;
     this.currentLeverOffset = this.isOn ? 1 : -1;
   }
-
-  public init(): void {}
 
   public setPowerState(hasPower: boolean): void {
     this.hasPower = hasPower;
@@ -225,7 +207,7 @@ export class IndustrialToggle implements BusyBoardModule {
     const clickRadius = bezelRadius * 2.5;
 
     // Check distance to handle click/drag
-    const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+    const dist = Math.hypot((x - centerX), (y - centerY));
     if (dist < clickRadius) {
       this.isDragging = true;
       this.dragStartY = y;
@@ -282,7 +264,7 @@ export class IndustrialToggle implements BusyBoardModule {
     }
   }
 
-  public destroy(): void {}
+
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     if (w < 2 * r) r = w / 2;

@@ -15,8 +15,8 @@ export interface GameHeaderConfig {
  * Displays intelligent back-to-portal and home navigation on the left, and settings menu toggle on the right.
  */
 export class GameHeader {
-  private element: HTMLElement;
-  private config: GameHeaderConfig;
+  private readonly element: HTMLElement;
+  private readonly config: GameHeaderConfig;
 
   constructor(config: GameHeaderConfig) {
     this.config = config;

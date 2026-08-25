@@ -1,15 +1,8 @@
-import type { BusyBoardModule } from '../BusyBoardModule';
+import { BaseBusyBoardModule } from './BaseBusyBoardModule';
 import type { LuminaryBoardGame } from '../LuminaryBoardGame';
-import { AudioController } from '../../../core/AudioController';
-import { HapticController } from '../../../core/HapticController';
 
-export class DualFingerGradient implements BusyBoardModule {
-  public id: string;
-  public x: number;
-  public y: number;
-  public w: number;
-  public h: number;
-  private game: LuminaryBoardGame;
+export class DualFingerGradient extends BaseBusyBoardModule {
+  private readonly game: LuminaryBoardGame;
 
   private isDragging = false;
   private draggedNode: 'p1' | 'p2' | null = null;
@@ -17,23 +10,15 @@ export class DualFingerGradient implements BusyBoardModule {
   private p2 = { x: 0, y: 0 };
   private setupDone = false;
 
-  private audio: AudioController;
-  private haptics: HapticController;
-
   constructor(id: string, x: number, y: number, w: number, h: number, game: LuminaryBoardGame) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
+    super(id, x, y, w, h);
     this.game = game;
-    this.audio = AudioController.getInstance();
-    this.haptics = HapticController.getInstance();
   }
 
-  public init(): void {}
+  private animPhase = 0;
 
   public render(ctx: CanvasRenderingContext2D, px: number, py: number, pw: number, ph: number): void {
+    this.animPhase += 0.05;
     const theme = this.game.getTheme();
     const margin = 12;
     const mx = px + margin;
@@ -139,6 +124,21 @@ export class DualFingerGradient implements BusyBoardModule {
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
 
+    // Tailored Fluid Energy Node Halo (only while dragging)
+    if (this.isDragging && this.draggedNode) {
+      const activePt = this.draggedNode === 'p1' ? this.p1 : this.p2;
+      ctx.save();
+      const nodeGlow = ctx.createRadialGradient(activePt.x, activePt.y, 4, activePt.x, activePt.y, 24);
+      const glowColor = theme === 'paper' ? 'rgba(230, 126, 34, ' : 'rgba(0, 255, 204, ';
+      nodeGlow.addColorStop(0, glowColor + '0.6)');
+      nodeGlow.addColorStop(1, glowColor + '0)');
+      ctx.fillStyle = nodeGlow;
+      ctx.beginPath();
+      ctx.arc(activePt.x, activePt.y, 24, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
     // Draw handle 1 (p1)
     ctx.beginPath();
     ctx.arc(this.p1.x, this.p1.y, 12, 0, Math.PI * 2);
@@ -241,7 +241,7 @@ export class DualFingerGradient implements BusyBoardModule {
     }
   }
 
-  public destroy(): void {}
+
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     if (w < 2 * r) r = w / 2;
