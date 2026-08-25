@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { LuminaryBoardGame } from '../src/games/busyBoard/LuminaryBoardGame';
+import { SoundWaveStudioGame } from '../src/games/busyBoard/SoundWaveStudioGame';
 import { AudioController } from '../src/core/AudioController';
 
 function createMockCanvas(): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
-  canvas.width = 390;
-  canvas.height = 844;
+  canvas.width = 900;
+  canvas.height = 600;
 
   const ctxBase: Record<string, any> = {
     fillStyle: '',
@@ -19,6 +19,8 @@ function createMockCanvas(): HTMLCanvasElement {
     lineJoin: 'miter',
     shadowColor: '',
     shadowBlur: 0,
+    shadowOffsetX: 0,
+    shadowOffsetY: 0,
     measureText: vi.fn(() => ({ width: 50 })),
     clearRect: vi.fn(),
     fillRect: vi.fn(),
@@ -26,12 +28,17 @@ function createMockCanvas(): HTMLCanvasElement {
     moveTo: vi.fn(),
     lineTo: vi.fn(),
     stroke: vi.fn(),
+    strokeRect: vi.fn(),
     save: vi.fn(),
     restore: vi.fn(),
     translate: vi.fn(),
+    rotate: vi.fn(),
     arc: vi.fn(),
-    fill: vi.fn(),
+    arcTo: vi.fn(),
     clip: vi.fn(),
+    fill: vi.fn(),
+    fillText: vi.fn(),
+    strokeText: vi.fn(),
     createLinearGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
     createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
   };
@@ -60,8 +67,8 @@ function createMockCanvas(): HTMLCanvasElement {
   return canvas;
 }
 
-describe('LuminaryBoardGame', () => {
-  let game: LuminaryBoardGame;
+describe('SoundWaveStudioGame (Board 4)', () => {
+  let game: SoundWaveStudioGame;
   let canvas: HTMLCanvasElement;
 
   beforeEach(() => {
@@ -98,7 +105,7 @@ describe('LuminaryBoardGame', () => {
       }
     } as any;
 
-    game = new LuminaryBoardGame();
+    game = new SoundWaveStudioGame();
     canvas = createMockCanvas();
     game.init(canvas);
   });
@@ -107,56 +114,42 @@ describe('LuminaryBoardGame', () => {
     game.destroy();
   });
 
-  it('should initialize without errors', () => {
+  it('should initialize game board cleanly', () => {
     expect(game).toBeDefined();
-    expect(game.getTheme()).toBe('paper');
-  });
-
-  it('should toggle theme from paper to neon', () => {
-    game.setTheme('neon');
-    expect(game.getTheme()).toBe('neon');
-  });
-
-  it('should update RGB state', () => {
-    game.updateRGB('r', 200);
-    expect(game.getRGB().r).toBe(200);
-  });
-
-  it('should instantiate RGBLightModule (012) in modules list', () => {
-    const modules = (game as any).modules;
-    const rgbBlock = modules.find((m: any) => m.id === '012');
-    expect(rgbBlock).toBeDefined();
-    expect(rgbBlock.w).toBe(2);
-    expect(rgbBlock.h).toBe(2);
-  });
-
-  it('should instantiate StereoPannerModule (013) in modules list', () => {
-    const modules = (game as any).modules;
-    const panner = modules.find((m: any) => m.id === '013');
-    expect(panner).toBeDefined();
-    expect(panner.w).toBe(1);
-    expect(panner.h).toBe(1);
   });
 
   it('should update and render without errors', () => {
-    expect(() => game.update(16)).not.toThrow();
+    expect(() => {
+      game.update(16);
+      game.render();
+    }).not.toThrow();
   });
 
-  it('should handle resize layout', () => {
-    game.resize(500, 500);
-    expect(() => game.update(16)).not.toThrow();
+  it('should trigger screen shake cleanly', () => {
+    expect(() => {
+      game.triggerShake(300, 15);
+      game.update(16);
+      game.render();
+    }).not.toThrow();
   });
 
-  it('should process pointer down, move, and up', () => {
-    const downEvent = new MouseEvent('mousedown', { clientX: 100, clientY: 100 });
+  it('should handle pointer interactions across modules', () => {
+    const downEvent = new MouseEvent('mousedown', { clientX: 50, clientY: 50 });
     canvas.dispatchEvent(downEvent);
 
-    const moveEvent = new MouseEvent('mousemove', { clientX: 120, clientY: 100 });
+    const moveEvent = new MouseEvent('mousemove', { clientX: 100, clientY: 50 });
     canvas.dispatchEvent(moveEvent);
 
     const upEvent = new MouseEvent('mouseup');
     canvas.dispatchEvent(upEvent);
 
-    expect(() => game.update(16)).not.toThrow();
+    expect(() => game.render()).not.toThrow();
+  });
+
+  it('should support resize operations', () => {
+    expect(() => {
+      game.resize(1200, 800);
+      game.render();
+    }).not.toThrow();
   });
 });

@@ -33,6 +33,21 @@ import { HeavyDutyZipper } from './modules/HeavyDutyZipper';
 import { TumblerCombination } from './modules/TumblerCombination';
 import { ThreadedScrew } from './modules/ThreadedScrew';
 
+// Board 4 Modules (Sound & Wave Studio)
+import { PitchRibbon } from './modules/PitchRibbon';
+import { SirenPullHandle } from './modules/SirenPullHandle';
+import { FormantShifter } from './modules/FormantShifter';
+import { MorseTelegraphKey } from './modules/MorseTelegraphKey';
+import { BassPlunger } from './modules/BassPlunger';
+import { SwipingChordMatrix } from './modules/SwipingChordMatrix';
+
+// Board 5 Modules (Typography & Interface Board)
+import { OdometerTumbler } from './modules/OdometerTumbler';
+import { FontWeightMorph } from './modules/FontWeightMorph';
+import { WordGravitySwitch } from './modules/WordGravitySwitch';
+import { KineticTextHolder } from './modules/KineticTextHolder';
+import { CaseSwitcher } from './modules/CaseSwitcher';
+
 export type BusyBoardModuleConstructor = new (
   id: string,
   x: number,
@@ -58,6 +73,7 @@ export const BoardModuleRegistry: Record<string, BusyBoardModuleConstructor> = {
   // Board 2
   '011': RotaryDimmer,
   '012': RGBLightModule,
+  '013': StereoPannerModule,
   '015': RainbowCrossfader,
   '016': ShadowProjection,
   '017': StrobeFrequency,
@@ -76,5 +92,20 @@ export const BoardModuleRegistry: Record<string, BusyBoardModuleConstructor> = {
   '028': HeavyDutyZipper,
   '029': TumblerCombination,
   '030': ThreadedScrew,
-  '031': StereoPannerModule,
+
+  // Board 4
+  '031': PitchRibbon,
+  '033': SirenPullHandle,
+  '037': FormantShifter,
+  '038': MorseTelegraphKey,
+  '039': BassPlunger,
+  '040': SwipingChordMatrix,
+
+  // Board 5
+  '041': FontWeightMorph,
+  '043': OdometerTumbler,
+  '044': CaseSwitcher,
+  '046': KineticTextHolder,
+  '047': WordGravitySwitch,
 };
+

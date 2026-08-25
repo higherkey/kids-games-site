@@ -4,6 +4,9 @@ import './GameUI.css';
 
 export interface GameUIConfig {
   gameName: string;
+  portalId?: string;
+  portalName?: string;
+  onPortalBack?: () => void;
   onHome: () => void;
   onPause: () => void;
   onResume: () => void;
@@ -29,6 +32,9 @@ export class GameUI {
     this.config = config;
     this.gameHeader = new GameHeader({
       gameName: config.gameName,
+      portalId: config.portalId,
+      portalName: config.portalName,
+      onPortalBack: config.onPortalBack,
       onHome: config.onHome,
       onMenuToggle: () => this.toggleMenu(),
     });

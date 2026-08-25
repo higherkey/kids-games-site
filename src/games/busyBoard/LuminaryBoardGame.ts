@@ -39,7 +39,7 @@ export class LuminaryBoardGame extends BaseBusyBoardGame {
       { id: '019', col: 3, row: 2, w: 1, h: 1 }, // ContrastInverter
 
       { id: '020', col: 4, row: 0, w: 1, h: 2 }, // DualFingerGradient (Double height)
-      { id: '031', col: 4, row: 2, w: 1, h: 1 }, // StereoPannerModule
+      { id: '013', col: 4, row: 2, w: 1, h: 1 }, // StereoPannerModule
     ];
 
     layouts.forEach(layout => {
